@@ -54,7 +54,10 @@ export function assessCrew(crew,taskId){
    const exam=member.dailyExam;
    if(!exam||exam.day!==member.medicalDay||exam.name!==member.name)reasons.push('обязательный медосмотр за день не пройден');
    else{
-    const checked=assessCrew([{...member,requireDailyExam:false,values:exam.values,fatigue:exam.fatigue,dose:exam.dose,trusted:exam.trusted,symptoms:exam.symptoms,history:[],lastTrusted:0}],taskId).ranked[0];
+    const review=member.dailyRecoveryReview;
+    const reviewed=review&&review.day===exam.day&&review.examRecordedAt===exam.recordedAt&&review.memberId===member.id&&review.trusted;
+    const effective=reviewed?review:exam;
+    const checked=assessCrew([{...member,requireDailyExam:false,values:effective.values,fatigue:effective.fatigue,dose:Math.max(exam.dose,effective.dose),trusted:effective.trusted,symptoms:effective.symptoms,history:[],lastTrusted:0}],taskId).ranked[0];
     reasons.push(...checked.reasons.map(reason=>'Медосмотр: '+reason));
    }
   }
@@ -121,7 +124,9 @@ export class MissionControl{
    if(m.dose>=radiationRules.doseHold)updateRadiationWatch(m);});
  }
  assessment(taskId){this.syncDailyExams();return planTeam(this.monitor.members,taskId);}
+ operatorAllowed(taskId){if(!this.operatorId)return true;this.syncDailyExams();const member=this.monitor.members.find(m=>m.id===this.operatorId);return !!member&&assessCrew([member],taskId).ranked[0].eligible;}
  startPreflight(taskId,planned=null){
+  if(!this.operatorAllowed(taskId)){this.record('blocked','Допуск текущего профиля не соответствует требованиям задания.');return false;}
   if(this.finished||this.preflight?.status==='testing'||this.assignment?.status==='working'||this.assignment?.status==='paused')return false;
   const plan=this.assessment(taskId);
   if(planned){const ids=[...planned.ids,planned.reserveId];if(planned.ids.length!==tasks[taskId].size||new Set(ids).size!==ids.length||ids.some(id=>!plan.ranked.find(m=>m.id===id)?.eligible)){this.record('blocked','Дневной план не соответствует текущему состоянию экипажа.');return false;}}
@@ -131,6 +136,7 @@ export class MissionControl{
   this.monitor.members.forEach(m=>m.status=ids.includes(m.id)?'testing':'rest');this.record('preflight','Начата 4-секундная учебная проба нагрузки: группа и резерв.',{ids,taskId});return true;
  }
  assign(taskId){
+  if(!this.operatorAllowed(taskId)){this.record('blocked','Назначение заблокировано допуском текущего профиля.');return false;}
   if(this.finished||['working','paused'].includes(this.assignment?.status))return false;
   const p=this.preflight,plan=this.assessment(taskId);
   if(p?.planned){plan.team=p.planned.ids.map(id=>plan.ranked.find(m=>m.id===id));plan.reserve=plan.ranked.find(m=>m.id===p.planned.reserveId);plan.ready=plan.team.length===tasks[taskId].size&&plan.team.every(m=>m?.eligible)&&!!plan.reserve?.eligible;}
@@ -158,6 +164,7 @@ export class MissionControl{
   return {bad,candidates,ids,reserve,ready:ids.length===tasks[a.taskId].size&&!!reserve,reason:!candidates.length?'Нет подходящего участника с пройденной проверкой.':!reserve?'После замены не остаётся здорового резерва.':'Подобрана замена с пройденной проверкой и резерв.'};
  }
  replace(){
+  if(this.assignment&&!this.operatorAllowed(this.assignment.taskId))return false;
   const p=this.replacementPlan();if(this.finished||!p?.ready)return false;
   const a=this.assignment,old=[...a.ids];a.ids=p.ids;a.reserveId=p.reserve.id;a.status='working';a.participants=[...new Set([...a.participants,...a.ids])];a.replacements.push({second:this.elapsed,old,new:[...a.ids]});this.replacements++;
   this.monitor.members.forEach(m=>m.status=a.ids.includes(m.id)?'working':'rest');this.record('replacement','Выполнена замена участника; задание продолжается.',{old,ids:[...a.ids],reserveId:a.reserveId});return true;
@@ -181,8 +188,9 @@ export class MissionControl{
    this.syncDailyExams();const ranked=assessCrew(this.monitor.members,a.taskId).ranked;
    const bad=a.ids.filter(id=>!ranked.find(m=>m.id===id)?.eligible);
    const reserveGood=ranked.find(m=>m.id===a.reserveId)?.eligible;
-   if((bad.length||!reserveGood)&&a.status==='working'){a.status='paused';a.pauseReason=bad.length?'У назначенного участника ухудшение состояния или потеря данных.':'Резерв недоступен.';this.monitor.members.forEach(m=>m.status='rest');this.record('pause',a.pauseReason+' Задание приостановлено.',{ids:bad});}
-   else if(!bad.length&&a.status==='paused'){
+   const operatorHealthy=this.operatorAllowed(a.taskId);
+   if((bad.length||!reserveGood||!operatorHealthy)&&a.status==='working'){a.status='paused';a.pauseReason=bad.length?'У назначенного участника ухудшение состояния или потеря данных.':'Резерв недоступен.';this.monitor.members.forEach(m=>m.status='rest');this.record('pause',a.pauseReason+' Задание приостановлено.',{ids:bad});}
+   else if(!bad.length&&operatorHealthy&&a.status==='paused'){
     const reserve=ranked.find(m=>m.eligible&&!a.ids.includes(m.id));
     if(reserve){a.reserveId=reserve.id;a.status='working';this.monitor.members.forEach(m=>m.status=a.ids.includes(m.id)?'working':'rest');this.record('resume','Показатели восстановились; резерв подтверждён, задание возобновлено.');}
    }

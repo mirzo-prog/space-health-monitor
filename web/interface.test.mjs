@@ -9,7 +9,7 @@ class Element{
 }
 function browser(scenario='station',auto=true){
  const elements=Object.fromEntries([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()]));elements.scenario.value=scenario;elements.task.value='repair';elements.name.value='<Мирзо>';elements.autopilot.checked=auto;
- let tick;const context={document:{getElementById:id=>{assert.ok(elements[id],id);return elements[id]},createElement:()=>new Element(),createTextNode:text=>text,querySelectorAll:selector=>Array.from({length:selector==='.metric'?3:5},()=>new Element())},window:{addEventListener(){},localStorage:{data:{},getItem(key){return this.data[key]||null;},setItem(key,value){this.data[key]=value;}}},setInterval:fn=>{tick=fn;return 1},clearInterval(){},console,Blob,URL,setTimeout,structuredClone,TextEncoder,atob};
+ let tick;const context={document:{body:new Element(),querySelector:selector=>selector.startsWith('#')?elements[selector.slice(1)]||null:new Element(),getElementById:id=>{assert.ok(elements[id],id);return elements[id]},createElement:()=>new Element(),createTextNode:text=>text,querySelectorAll:selector=>Array.from({length:selector==='.metric'?3:5},()=>new Element())},window:{addEventListener(){},localStorage:{data:{},getItem(key){return this.data[key]||null;},setItem(key,value){this.data[key]=value;}}},setInterval:fn=>{tick=fn;return 1},clearInterval(){},console,Blob,URL,setTimeout,structuredClone,TextEncoder,atob};
  vm.createContext(context);vm.runInContext(html.split('<script>')[1].split('</script>')[0],context);
  return {elements,context,start(){elements.entry.listeners.submit({preventDefault(){}})},tick(){tick();},click(id){elements[id].listeners.click();},value(code){return vm.runInContext(code,context);}};
 }
@@ -40,4 +40,19 @@ test('PDF download button exports a .pdf file and restores button state',async()
  b.context.setTimeout=fn=>{fn();return 1;};b.context.document.body=new Element();
  b.context.document.createElement=tag=>{const el=new Element();if(tag==='canvas'){el.getContext=()=>drawn;el.toDataURL=()=> 'data:image/jpeg;base64,/9j/2Q==';}if(tag==='a'){el.click=()=>downloaded=el.download;el.remove=()=>{};}return el;};
  await b.elements['download-pdf'].listeners.click();assert.ok(downloaded.endsWith('.pdf'));assert.ok(downloaded.startsWith('alpha-crew-report-'));assert.equal(b.elements['download-pdf'].disabled,false);assert.ok(b.elements['pdf-feedback'].textContent.includes('PDF готов'));
+});
+function profileLogin(b,id='c1',pin='1234'){b.value(`portal.choose('${id}')`);for(const digit of pin)b.value(`portal.input('${digit}')`);}
+test('profile cards and PIN flow gate step three until the daily medical check',()=>{
+ const b=browser();assert.equal(b.elements['profile-cards'].children.length,4);profileLogin(b,'c1','1111');assert.equal(b.value('portal.profile'),null);assert.ok(b.elements['pin-message'].textContent.includes('Неверный'));
+ profileLogin(b);assert.equal(b.value('portal.profile.id'),'c1');assert.equal(b.elements['session-name'].textContent,'Алексей Иванов');assert.equal(b.value('selectedId'),'c1');assert.equal(b.value('portal.step'),2);assert.equal(b.elements['step-button-3'].disabled,true);b.click('to-flight-tasks');assert.equal(b.value('portal.step'),2);
+ examineAll(b);assert.equal(b.elements['to-flight-tasks'].disabled,false);assert.ok(b.elements['clearance-status'].textContent.includes('Допуск'));b.click('to-flight-tasks');assert.equal(b.value('portal.step'),3);assert.ok(b.value('mission.preflight'));
+});
+test('switching profiles isolates daily exams, health and task progress and restores the original session',()=>{
+ const b=browser();profileLogin(b,'c1');examineAll(b);b.click('to-flight-tasks');for(let i=0;i<6;i++)b.tick();const time=b.value('mission.elapsed');assert.equal(time,6);b.click('logout');assert.equal(b.value('portal.profile'),null);profileLogin(b,'c2');assert.equal(b.value('medicalBook.exams.length'),0);assert.equal(b.value('selectedId'),'c2');assert.equal(b.value('mission.elapsed'),0);b.click('logout');profileLogin(b,'c1');assert.equal(b.value('mission.elapsed'),time);assert.equal(b.value('medicalBook.exams.length'),4);assert.equal(b.value('selectedId'),'c1');
+});
+test('critical profile recovers through a timed demo protocol with a separate recheck and unchanged daily exam',()=>{
+ const b=browser();profileLogin(b,'c4');examineAll(b);assert.equal(b.elements['to-flight-tasks'].disabled,true);assert.equal(b.elements['recovery-panel'].hidden,false);assert.ok(b.value("mission.timeline.some(e=>e.type==='demo-medical')"));const old=b.value("medicalBook.get(medicalBook.today(),'c4').values.spO2");b.click('recover-rest');assert.equal(b.elements['recover-rest'].disabled,true);for(let i=0;i<15;i++)b.tick();assert.equal(b.elements['recover-rest'].disabled,false);assert.equal(b.elements['to-flight-tasks'].disabled,false);assert.equal(b.value("medicalBook.get(medicalBook.today(),'c4').values.spO2"),old);assert.equal(b.value('mission.monitor.members[3].dailyRecoveryReview.source'),'simulation_recheck');
+});
+test('biometric/badge button is explicitly a local demo and radiation holds cannot be bypassed by recovery',()=>{
+ const b=browser();b.value("portal.choose('c2')");b.click('badge-login');assert.equal(b.value('portal.profile.id'),'c2');assert.ok(b.elements['session-method'].textContent.includes('демонстрация'));examineAll(b);b.value("mission.monitor.members[1].dose=.12;updateRadiationWatch(mission.monitor.members[1]);render()");b.click('recover-rest');for(let i=0;i<15;i++)b.tick();assert.equal(b.value('mission.monitor.members[1].dose'),.12);assert.equal(b.elements['to-flight-tasks'].disabled,true);assert.ok(b.elements['recovery-feedback'].textContent.includes('Радиационное'));
 });

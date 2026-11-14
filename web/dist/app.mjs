@@ -1,10 +1,11 @@
+import {CrewPortal,profileClearance} from './crew-portal.mjs';
 import {renderReportPdf} from './pdf-report.mjs';
 import {DailyMedicalBook} from './daily-medical.mjs';
 import {DailyMedicalUI} from './daily-ui.mjs';
 import {MissionControl,tasks,missionScenarios,assessCrew,riskOf,eventDescription,radiationRules} from './crew.mjs';
 import {MissionScene} from './scene3d.mjs';
 const $=id=>document.getElementById(id);
-let mission,timer,selectedId,assessment,paused=false,report,initialName,previousRecommendation,seenEvents=0,scene,medicalBook,medicalUI;
+let mission,timer,selectedId,assessment,paused=false,report,initialName,previousRecommendation,seenEvents=0,scene,medicalBook,medicalUI,portal;
 const charts=[['hr-chart','heart_rate','#61e2d3',40,145],['spo2-chart','spO2','#93aaff',85,100],['rad-chart','radiation_level','#efba73',0,10]];
 const format=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -17,6 +18,7 @@ function collectEvents(){
 }
 function setTask(id){if(mission?.assignment&&['working','paused'].includes(mission.assignment.status)){feedback('Сначала завершите или отмените текущее задание.');return;}$('task').value=id;previousRecommendation=null;render();}
 function autoPilot(){
+ if(portal?.profile&&(portal.step!==3||!profileClearance(mission,portal.profile.id).allowed))return;
  if(!$('autopilot').checked||paused||mission.finished||!dailyReady())return;
  const a=mission.assignment;
  if(a?.status==='paused'){const replacement=mission.replacementPlan();if(replacement?.ready)mission.replace();return;}
@@ -102,18 +104,20 @@ function render(){
  $('event-title').textContent=e?eventDescription(e,mission.monitor.members):'Наблюдение за экипажем продолжается';$('event-detail').textContent=e?`Событие в симуляции / длительность ${mission.elapsed-e.started} с. Состояние каждого участника проверяется отдельно.`:'Проверяются текущие измерения, жалобы, усталость, история и доступность резерва.';$('event-badge').textContent=mission.finished?'ЗАПИСЬ ОКОНЧЕНА':paused?'ПАУЗА':e?'СОБЫТИЕ':'ШТАТНО';
  $('feedback').textContent=e?.type==='sensor'?'Показание неисправного датчика отклонено; последнее достоверное значение сохранено. Участник временно исключён из назначения.':e?'Автоматическая защита и повторная оценка экипажа. Опасное задание приостанавливается до восстановления или замены.':'Нет активных сценарных сбоев. Участники вне нормы остаются исключёнными из назначения.';
  collectEvents();
+ portal?.refresh();portal?.save();
  $('scene-crew-label').textContent=mission.assignment?'Участники: '+names(mission.assignment.ids)+' / резерв: '+names([mission.assignment.reserveId]):'Экипаж ожидает проверки готовности';
  if(scene)scene.update({scenario:mission.scenario,task:mission.assignment?.taskId||$('task').value,status:paused?'paused':mission.finished?'finished':mission.assignment?.status||'waiting',progress:mission.assignment?mission.assignment.progress/tasks[mission.assignment.taskId].duration:0,team:mission.assignment?.ids.length||tasks[$('task').value].size,alert:!!e});
 }
 function start(name){
- clearInterval(timer);initialName=name;let storage;try{storage=window.localStorage;}catch{}medicalBook=new DailyMedicalBook(storage,name);mission=new MissionControl(name,$('scenario').value,medicalBook);$('task').value=missionScenarios[mission.scenario].preferred;assessment=mission.assessment($('task').value);selectedId=assessment.best?.id||'c1';previousRecommendation=null;seenEvents=0;paused=false;report=null;
+ clearInterval(timer);initialName=name;let storage;try{storage=window.localStorage;}catch{}medicalBook=new DailyMedicalBook(storage,portal?.profile?'ALPHA/profile/'+portal.profile.id:name);mission=new MissionControl(name,$('scenario').value,medicalBook);if(portal?.profile)mission.operatorId=portal.profile.id;$('task').value=missionScenarios[mission.scenario].preferred;assessment=mission.assessment($('task').value);selectedId=portal?.profile?.id||assessment.best?.id||'c1';previousRecommendation=null;seenEvents=0;paused=false;report=null;
  $('welcome').hidden=true;$('result').hidden=true;$('dashboard').hidden=false;$('pause').disabled=false;$('finish').disabled=false;$('task').disabled=false;$('pause').textContent='Пауза';$('pilot').textContent='АЛЬФА / 4 участника';$('scenario-name').textContent=missionScenarios[mission.scenario].name;$('log').replaceChildren();feedback('');$('rest-feedback').textContent='';
  if(medicalUI)medicalUI.setContext(mission,medicalBook);else medicalUI=new DailyMedicalUI(mission,medicalBook,()=>{mission.syncDailyExams();autoPilot();render();},executeDailyRow);
+ if(portal?.profile){medicalUI.$('medical-member').value=portal.profile.id;medicalUI.render();}
  if(!scene)scene=new MissionScene($('mission-3d'),$('scene-fallback'));autoPilot();render();
- timer=setInterval(()=>{if(paused)return;mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
+ timer=setInterval(()=>{if(paused)return;if(portal?.profile&&portal.step!==3&&mission.elapsed===0&&!portal.hasEnteredFlight){portal.refresh();return;}mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
 }
 function finish(){
- clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();report.createdAt=new Date().toISOString();
+ clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();report.createdAt=new Date().toISOString();if(portal?.profile)report.operator={id:portal.profile.id,name:portal.profile.name};
  $('dashboard').hidden=true;$('result').hidden=false;$('result-name').textContent=initialName;$('result-score').textContent=mission.completed.length;$('result-resolved').textContent=mission.replacements;$('result-mistakes').textContent=mission.elapsed;
  $('result-note').textContent=`Сценарий: ${missionScenarios[mission.scenario].name}. ${mission.completed.length} заданий выполнено. ${mission.assignment?.status==='interrupted'?'Последнее задание прервано окончанием наблюдения.':''}`;
  $('selection-summary').textContent='Последняя оценка: '+assessment.explanation;$('medical-summary').textContent='Разбор включает весь экипаж, а не только открытого участника.';
@@ -148,3 +152,49 @@ function executeDailyRow(row,day){
  return ok?'Группа из дневного плана проходит пробу нагрузки. Через 4 секунды нажмите «Назначить группу».':'Назначение из плана заблокировано: текущие показатели или допуск изменились. Пересчитайте план.';
 }
 $('reset-camera').addEventListener('click',()=>scene?.reset());window.addEventListener('resize',drawCharts);
+
+function savePersonalState(){
+ if(!mission)return null;
+ return {mission:mission.report(),preflight:structuredClone(mission.preflight),event:structuredClone(mission.event),selectedId,task:$('task').value,autopilot:$('autopilot').checked,paused,rosterName:initialName};
+}
+function openPersonalProfile(profile,saved){
+ $('autopilot').checked=false;
+ if(saved?.mission?.scenario&&missionScenarios[saved.mission.scenario])$('scenario').value=saved.mission.scenario;
+ start(portal.profiles[0].name);
+ if(saved){
+  const data=saved.mission;
+  mission.monitor.members=structuredClone(data.crew);mission.elapsed=data.seconds;mission.monitor.elapsed=data.seconds;mission.finished=data.finished;mission.completed=structuredClone(data.completed||[]);mission.assignment=structuredClone(data.assignment);mission.preflight=structuredClone(saved.preflight);mission.preflightResults=structuredClone(data.preflights||[]);mission.event=structuredClone(saved.event);mission.timeline=structuredClone(data.timeline||[]);mission.replacements=data.replacements||0;
+  $('task').value=tasks[saved.task]?saved.task:missionScenarios[mission.scenario].preferred;$('autopilot').checked=!!saved.autopilot;paused=!!saved.paused;$('pause').textContent=paused?'Продолжить':'Пауза';mission.syncDailyExams();seenEvents=0;$('log').replaceChildren();
+ }
+ if(!saved)$('autopilot').checked=true;selectedId=profile.id;medicalUI.$('medical-member').value=profile.id;medicalUI.render();render();
+ if(mission.finished)finish();
+}
+function recoveryReview(id,stabilize=false){
+ const m=mission.monitor.members.find(m=>m.id===id),exam=medicalBook.get(medicalBook.today(),id);
+ if(!exam)return 'Сначала запишите обязательный осмотр за сегодня. Протокол не заменяет ежедневный осмотр.';
+ if(!m.trusted)return 'Текущие измерения недостоверны. Повторная оценка возможна после восстановления датчика или канала.';
+ if(m.radiationWatch?.active)return 'Радиационное ограничение сохраняется. Отдых не обнуляет дозу и не заменяет последовательность нормальных замеров фона.';
+ if(stabilize){
+  m.baseline={...m.baseline,heart_rate:72,spO2:98};m.values={...m.values,heart_rate:72,spO2:98};m.fatigue=Math.max(0,m.fatigue-10);m.symptoms=[];
+  if(mission.event?.target===mission.monitor.members.indexOf(m)&&['hypoxia','stress','oxygen_trend','fatigue'].includes(mission.event.type))mission.event=null;
+  m.recoveryProtocolCompletedAt=new Date().toISOString();mission.record('recovery',m.name+': учебное восстановление завершено; выполнены повторные измерения.');
+ }
+ const measured={...m,requireDailyExam:false};const current=assessCrew([measured],'research').ranked[0];
+ if(!current.eligible){render();return 'Повторная проверка: '+current.reasons.join('; ')+'. Допуск остаётся закрыт.';}
+ // A separate follow-up record preserves the immutable daily exam and dose limits.
+ m.dailyRecoveryReview={memberId:id,day:medicalBook.today(),examRecordedAt:exam.recordedAt,recordedAt:new Date().toISOString(),source:'simulation_recheck',values:{...m.values},fatigue:m.fatigue,dose:Math.max(exam.dose,m.dose),trusted:m.trusted,symptoms:structuredClone(m.symptoms)};
+ mission.record('recheck',m.name+': повторная оценка состояния. Исходный ежедневный осмотр сохранён.');render();return 'Повторная проверка завершена. '+(profileClearance(mission,id).allowed?'Общий допуск открыт; требования конкретного задания проверяются отдельно.':'Ограничения остаются в силе.');
+}
+portal=new CrewPortal({
+ login:openPersonalProfile,
+ logout:()=>{clearInterval(timer);$('dashboard').hidden=true;$('result').hidden=true;},
+ snapshot:savePersonalState,
+ clearance:id=>profileClearance(mission,id),
+ progress:id=>({completed:mission?.completed.filter(a=>(a.participants||a.ids).includes(id)).length||0,seconds:mission?.elapsed||0}),
+ step:step=>{if(mission&&portal?.profile){$('dashboard').hidden=false;$('result').hidden=true;if(step===3)autoPilot();drawCharts();medicalUI.renderHistory();}},
+ message:text=>{mission.record('demo-medical',text);render();},
+ recover:id=>recoveryReview(id,true),
+ recheck:id=>recoveryReview(id,false),
+ examineCrew:()=>{let recorded=0;for(const m of mission.monitor.members){if(!medicalBook.get(medicalBook.today(),m.id)){medicalBook.record(medicalBook.today(),m,{values:m.values,fatigue:m.fatigue,dose:m.dose,trusted:m.trusted,symptoms:m.symptoms,source:'simulation',notes:'Учебный осмотр из панели экипажа'});recorded++;}}mission.syncDailyExams();medicalUI.render();render();return 'Записано учебных осмотров: '+recorded+'. Допуск каждого участника зависит от его показателей.';}
+});
+window.addEventListener('beforeunload',()=>portal.save());
