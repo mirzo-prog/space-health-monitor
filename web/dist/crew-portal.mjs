@@ -19,12 +19,9 @@ return data.state;}catch{this.warning='Сохранённый сеанс не у
 const portalElement=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
 export class CrewPortal{
  constructor(callbacks){
-  this.callbacks=callbacks;this.$=id=>document.getElementById(id);this.profiles=createCrew('Алексей Иванов');this.profile=null;this.pending=null;this.pin='';this.step=1;this.failures=0;this.lockedUntil=0;
+  this.callbacks=callbacks;this.$=id=>document.getElementById(id);this.profiles=createCrew('Алексей Иванов');this.profile=null;this.pending=null;this.step=1;
   let storage;try{storage=window.localStorage;}catch{}this.vault=new ProfileVault(storage);
   const root=this.$('profile-cards');for(const [index,p]of this.profiles.entries()){const card=portalElement('button',undefined,'profile-card');card.type='button';card.setAttribute('data-profile',p.id);card.append(portalElement('span',['◉','✦','⬡','◈'][index],'profile-avatar'),portalElement('strong',p.name),portalElement('span',p.role),portalElement('small','ALPHA / '+p.id.toUpperCase()));card.addEventListener('click',()=>this.choose(p.id));root.append(card);}
-  const keypad=this.$('pin-keypad');for(const digit of ['1','2','3','4','5','6','7','8','9','clear','0','back']){const b=portalElement('button',digit==='clear'?'Сброс':digit==='back'?'⌫':digit,'pin-key');b.type='button';b.setAttribute('aria-label',digit==='back'?'Удалить последнюю цифру':digit==='clear'?'Очистить PIN':'Цифра '+digit);b.addEventListener('click',()=>this.input(digit));keypad.append(b);}
-  this.$('badge-login').addEventListener('click',()=>this.authenticate('demo-badge'));
-  this.$('pin-cancel').addEventListener('click',()=>{this.pending=null;this.pin='';this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;});
   this.$('compact-primary').addEventListener('click',()=>this.primaryAction());
   this.$('compact-health-tab').addEventListener('click',()=>this.navigate(2));this.$('compact-tasks-tab').addEventListener('click',()=>this.navigate(3));
   this.$('compact-details').addEventListener('toggle',()=>this.callbacks.redraw?.());
@@ -36,7 +33,6 @@ export class CrewPortal{
   this.$('recover-medic').addEventListener('click',()=>{this.callbacks.message('УЧЕБНЫЙ ЗАПРОС: помощь бортинженера-медика.');this.$('recovery-feedback').textContent='Вызов медика добавлен в учебный журнал; внешнее сообщение не отправлялось.';});
   this.$('recheck-health').addEventListener('click',()=>this.recheck());
   this.$('crew-demo-exams').addEventListener('click',()=>{this.$('recovery-feedback').textContent=this.callbacks.examineCrew();this.refresh();});
-  window.addEventListener('keydown',e=>{if(!this.pending||this.profile)return;if(/^\d$/.test(e.key)){e.preventDefault();this.input(e.key);}else if(e.key==='Backspace'){e.preventDefault();this.input('back');}else if(e.key==='Escape')this.$('pin-cancel').click();});
   this.arrange();this.navigate(1);
  }
  arrange(){
@@ -52,15 +48,13 @@ export class CrewPortal{
   const reportHeading=document.querySelector('#result > h2');if(reportHeading)this.$('compact-report-content').append(reportHeading);
   document.body.classList.add('portal-active');document.body.classList.add('compact-mode');
  }
- choose(id){this.pending=this.profiles.find(p=>p.id===id);if(!this.pending)return;this.pin='';this.$('profile-cards').hidden=true;this.$('pin-screen').hidden=false;this.$('pin-person').textContent=this.pending.name+' / '+this.pending.role;this.$('pin-message').textContent='Учебный PIN для всех профилей: 1234. Или используйте демонстрацию ID-бейджа.';this.drawPin();}
- drawPin(){this.$('pin-dots').textContent='●'.repeat(this.pin.length)+'○'.repeat(4-this.pin.length);this.$('pin-dots').setAttribute('aria-label','Введено цифр: '+this.pin.length+' из 4');}
- input(value){if(!this.pending||this.profile)return;if(Date.now()<this.lockedUntil){this.$('pin-message').textContent='Слишком много попыток. Подождите 15 секунд.';return;}if(value==='clear')this.pin='';else if(value==='back')this.pin=this.pin.slice(0,-1);else if(/^\d$/.test(value)&&this.pin.length<4)this.pin+=value;this.drawPin();if(this.pin.length===4){if(this.pin==='1234')this.authenticate('demo-pin');else{this.pin='';this.drawPin();this.failures++;if(this.failures>=5){this.lockedUntil=Date.now()+15000;this.failures=0;}this.$('pin-message').textContent='Неверный PIN. Для учебного входа используйте 1234.';}}}
- authenticate(method){if(!this.pending||Date.now()<this.lockedUntil)return;this.profile=this.pending;this.pending=null;this.pin='';this.failures=0;this.$('auth-panel').hidden=true;this.$('header-session').hidden=false;this.$('session-name').textContent=this.profile.name;this.$('session-role').textContent=this.profile.role;this.$('session-method').textContent=method==='demo-pin'?'Локальный учебный PIN':'ID-бейдж / демонстрация';this.callbacks.login(this.profile,this.vault.load(this.profile.id));this.navigate(2);}
+ choose(id){const chosen=this.profiles.find(p=>p.id===id);if(!chosen)return;if(this.profile)this.logout();this.pending=chosen;this.authenticate();}
+ authenticate(){if(!this.pending)return;this.profile=this.pending;this.pending=null;this.$('auth-panel').hidden=true;this.$('header-session').hidden=false;this.$('session-name').textContent=this.profile.name;this.$('session-role').textContent=this.profile.role;this.$('session-method').hidden=true;this.callbacks.login(this.profile,this.vault.load(this.profile.id));this.navigate(2);}
  navigate(step){
   if(step===1&&this.profile){this.logout();return;}
   if(step!==1&&!this.profile)return;
   if(step===3&&!this.callbacks.clearance(this.profile.id).allowed&&!this.callbacks.hasProgress?.()){this.step=2;this.$('step-hint').textContent='Сначала завершите медосмотр и повторную проверку на шаге 2.';this.refresh();return;}
-  this.step=step;if(step===3)this.hasEnteredFlight=true;this.$('auth-panel').hidden=step!==1;this.$('step-health').hidden=step!==2;this.$('step-flight').hidden=step!==3;this.$('step-hint').textContent=['','Выберите крупную карточку, затем введите PIN или проверьте учебный ID-бейдж.','Запишите сегодняшний медосмотр. Проверьте допуск, историю и состояние экипажа.','Выберите задание или дневной план; проверьте готовность группы и резерв.'][step];
+  this.step=step;if(step===3)this.hasEnteredFlight=true;this.$('auth-panel').hidden=step!==1;this.$('step-health').hidden=step!==2;this.$('step-flight').hidden=step!==3;this.$('step-hint').textContent=['','Нажмите на карточку космонавта, чтобы начать.','Запишите сегодняшний медосмотр. Проверьте допуск, историю и состояние экипажа.','Выберите задание или дневной план; проверьте готовность группы и резерв.'][step];
   for(const n of [1,2,3]){this.$('step-button-'+n).setAttribute('aria-current',n===step?'step':'false');this.$('step-button-'+n).classList.toggle('active',n===step);this.$('step-button-'+n).disabled=n!==1&&!this.profile;}
   this.callbacks.step?.(step);this.refresh();
  }
@@ -114,5 +108,5 @@ export class CrewPortal{
  }
  recheck(){if(!this.profile)return;this.$('recovery-feedback').textContent=this.callbacks.recheck(this.profile.id);this.refresh();}
  save(){if(this.profile)this.vault.save(this.profile.id,this.callbacks.snapshot());}
- logout(){this.save();if(this.recoveryTimer){clearInterval(this.recoveryTimer);this.recoveryTimer=null;}this.callbacks.logout();this.profile=null;this.pending=null;this.pin='';this.hasEnteredFlight=false;this.missionLaunched=false;this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;this.$('header-session').hidden=true;this.$('auth-panel').hidden=false;this.$('recover-rest').disabled=false;this.$('recovery-progress').value=0;this.navigate(1);}
+ logout(){this.save();if(this.recoveryTimer){clearInterval(this.recoveryTimer);this.recoveryTimer=null;}this.callbacks.logout();this.profile=null;this.pending=null;this.hasEnteredFlight=false;this.missionLaunched=false;this.$('profile-cards').hidden=false;this.$('header-session').hidden=true;this.$('auth-panel').hidden=false;this.$('recover-rest').disabled=false;this.$('recovery-progress').value=0;this.navigate(1);}
 }

@@ -3399,5 +3399,20 @@ export const languageMessages=[
   " Суммарная доза: ",
   " Cumulative dose: ",
   " Jami doza: "
+ ],
+ [
+  "Нажмите на карточку космонавта, чтобы начать.",
+  "Select an astronaut card to get started.",
+  "Boshlash uchun kosmonavt kartasini tanlang."
+ ],
+ [
+  "У каждого космонавта сохраняются свои результаты и прогресс.",
+  "Each astronaut keeps their own results and progress.",
+  "Har bir kosmonavtning natijalari va bajarilish holati alohida saqlanadi."
+ ],
+ [
+  "Сменить космонавта",
+  "Switch astronaut",
+  "Kosmonavtni almashtirish"
  ]
 ];
