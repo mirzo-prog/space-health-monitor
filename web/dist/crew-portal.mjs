@@ -27,7 +27,7 @@ export class CrewPortal{
   this.$('pin-cancel').addEventListener('click',()=>{this.pending=null;this.pin='';this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;});
   this.$('logout').addEventListener('click',()=>this.logout());
   for(const step of [1,2,3])this.$('step-button-'+step).addEventListener('click',()=>this.navigate(step));
-  this.$('to-flight-tasks').addEventListener('click',()=>this.navigate(3));this.$('back-to-health').addEventListener('click',()=>this.navigate(2));this.$('start-scenario').addEventListener('click',()=>this.callbacks.scenario());
+  this.$('to-flight-tasks').addEventListener('click',()=>this.launch());this.$('launch-mission').addEventListener('click',()=>this.launch());this.$('quick-exam').addEventListener('click',()=>{const result=this.callbacks.examineCrew();this.$('launch-feedback').textContent=result;this.refresh();});this.$('back-to-health').addEventListener('click',()=>this.navigate(2));this.$('start-scenario').addEventListener('click',()=>this.callbacks.scenario());
   this.$('recover-rest').addEventListener('click',()=>this.beginRecovery());
   this.$('recover-kit').addEventListener('click',()=>{this.callbacks.message('УЧЕБНЫЙ ЗАПРОС: открыта карточка обращения к медблоку. Препараты и дозировки программа не назначает.');this.$('recovery-feedback').textContent='Запрос инструкции отмечен в журнале симуляции. Реальной связи с ЦУП нет.';});
   this.$('recover-medic').addEventListener('click',()=>{this.callbacks.message('УЧЕБНЫЙ ЗАПРОС: помощь бортинженера-медика.');this.$('recovery-feedback').textContent='Вызов медика добавлен в учебный журнал; внешнее сообщение не отправлялось.';});
@@ -39,8 +39,11 @@ export class CrewPortal{
  arrange(){
   // Move the existing nodes intact; original IDs, event handlers and classes survive.
   const health=this.$('health-tools'),flight=this.$('flight-tools');
-  for(const selector of ['.daily-medical','#live-mission','.diagnostics','.metrics','.crew-selection','.lower-grid','.disclaimer']){const el=document.querySelector(selector);if(el)health.append(el);}
-  for(const selector of ['.daily-planning','.assignment-panel','.scene-panel']){const el=document.querySelector(selector);if(el)flight.append(el);}
+  for(const selector of ['#live-mission','.metrics']){const el=document.querySelector(selector);if(el)health.append(el);}
+  for(const selector of ['.daily-medical','.diagnostics','.crew-selection','.lower-grid','.disclaimer']){const el=document.querySelector(selector);if(el)this.$('advanced-health-content').append(el);}
+  for(const selector of ['.scene-panel']){const el=document.querySelector(selector);if(el)flight.append(el);}
+  for(const selector of ['#scenario-controls','.daily-planning','.assignment-panel']){const el=document.querySelector(selector);if(el)this.$('advanced-flight-content').append(el);}
+  for(const id of ['advanced-health','advanced-flight'])this.$(id).addEventListener('toggle',()=>this.callbacks.redraw?.());
   const scenarios=document.querySelector('.scenario-picker');if(scenarios)this.$('scenario-picker-slot').append(scenarios);document.body.classList.add('portal-active');
  }
  choose(id){this.pending=this.profiles.find(p=>p.id===id);if(!this.pending)return;this.pin='';this.$('profile-cards').hidden=true;this.$('pin-screen').hidden=false;this.$('pin-person').textContent=this.pending.name+' / '+this.pending.role;this.$('pin-message').textContent='Учебный PIN для всех профилей: 1234. Или используйте демонстрацию ID-бейджа.';this.drawPin();}
@@ -50,7 +53,7 @@ export class CrewPortal{
  navigate(step){
   if(step===1&&this.profile){this.logout();return;}
   if(step!==1&&!this.profile)return;
-  if(step===3&&!this.callbacks.clearance(this.profile.id).allowed){this.step=2;this.$('step-hint').textContent='Сначала завершите медосмотр и повторную проверку на шаге 2.';this.refresh();return;}
+  if(step===3&&!this.callbacks.clearance(this.profile.id).allowed&&!this.callbacks.hasProgress?.()){this.step=2;this.$('step-hint').textContent='Сначала завершите медосмотр и повторную проверку на шаге 2.';this.refresh();return;}
   this.step=step;if(step===3)this.hasEnteredFlight=true;this.$('auth-panel').hidden=step!==1;this.$('step-health').hidden=step!==2;this.$('step-flight').hidden=step!==3;this.$('step-hint').textContent=['','Выберите крупную карточку, затем введите PIN или проверьте учебный ID-бейдж.','Запишите сегодняшний медосмотр. Проверьте допуск, историю и состояние экипажа.','Выберите задание или дневной план; проверьте готовность группы и резерв.'][step];
   for(const n of [1,2,3]){this.$('step-button-'+n).setAttribute('aria-current',n===step?'step':'false');this.$('step-button-'+n).classList.toggle('active',n===step);this.$('step-button-'+n).disabled=n!==1&&!this.profile;}
   this.callbacks.step?.(step);this.refresh();
@@ -60,15 +63,16 @@ export class CrewPortal{
   this.$('clearance-panel').classList.toggle('danger',!can);this.$('clearance-panel').classList.toggle('clearance-approved',can);
   this.$('clearance-status').textContent=can?'Физиологические показатели в норме. Допуск к штатным работам получен.':'ВНИМАНИЕ: допуск к работам ограничен.';
   this.$('clearance-reasons').textContent=can?'Требования конкретного задания и готовность резерва проверяются отдельно.':status.reasons.join('; ');
-  this.$('to-flight-tasks').disabled=!can;this.$('step-button-3').disabled=!can;
+  const canResume=!!this.callbacks.hasProgress?.();this.$('to-flight-tasks').disabled=!can&&!canResume;this.$('step-button-3').disabled=!can&&!canResume;this.$('to-flight-tasks').textContent=canResume?'2. Продолжить миссию':'2. Запустить миссию';
   if(can)this.lastMedicalAlert=null;
   const missingExam=!status.member?.dailyExam||status.member.dailyExam.day!==status.member.medicalDay;this.$('recovery-panel').hidden=can||missingExam;if(missingExam)this.$('clearance-status').textContent='Для допуска запишите обязательный медосмотр за сегодня.';this.$('recovery-warning').textContent='Выход в открытый космос и тяжёлые работы приостановлены. Учебная передача телеметрии в медблок ЦУП отмечается в журнале; реальной связи с Землёй нет.';
   const alertKey=this.profile.id+':'+status.reasons.join('|');if(!can&&!missingExam&&this.lastMedicalAlert!==alertKey){this.lastMedicalAlert=alertKey;this.callbacks.message('УЧЕБНАЯ ТЕЛЕМЕТРИЯ В МЕДБЛОК ЦУП: '+this.profile.name+'. '+status.reasons.join('; ')+'. Реальная передача не выполнялась.');}
   this.$('start-scenario').disabled=!!this.callbacks.running?.();
-  this.$('profile-storage-warning').textContent=this.vault.warning;
-  if(!can&&this.step===3){this.step=2;this.$('step-health').hidden=false;this.$('step-flight').hidden=true;this.$('step-button-2').classList.toggle('active',true);this.$('step-button-3').classList.toggle('active',false);this.$('step-hint').textContent='Допуск изменился. Вернитесь к мониторингу и повторной проверке.';}
+  this.$('profile-storage-warning').textContent=this.vault.warning;this.callbacks.launchStatus?.();
+  if(!can&&this.step===3&&!this.missionLaunched&&!canResume){this.step=2;this.$('step-health').hidden=false;this.$('step-flight').hidden=true;this.$('step-button-2').classList.toggle('active',true);this.$('step-button-3').classList.toggle('active',false);this.$('step-hint').textContent='Допуск изменился. Вернитесь к мониторингу и повторной проверке.';}
   const progress=this.callbacks.progress(this.profile.id);this.$('personal-progress').textContent=`Личный прогресс: ${progress.completed} заданий · ${progress.seconds} с наблюдения.`;
  }
+ launch(){if(!this.profile)return;const result=this.callbacks.launch();this.$('launch-feedback').textContent=result.message;if(result.started){this.missionLaunched=true;this.navigate(3);}}
  beginRecovery(){
   if(!this.profile||this.recoveryTimer)return;this.remaining=15;this.$('recover-rest').disabled=true;this.callbacks.message('УЧЕБНЫЙ ПРОТОКОЛ: отдых и стабилизация дыхания. 15 минут представлены 15 секундами симуляции.');
   this.$('recovery-feedback').textContent='Выполняется учебный протокол: 15 с (модель 15 мин). Показатели будут проверены повторно; доза не уменьшается.';
@@ -76,5 +80,5 @@ export class CrewPortal{
  }
  recheck(){if(!this.profile)return;this.$('recovery-feedback').textContent=this.callbacks.recheck(this.profile.id);this.refresh();}
  save(){if(this.profile)this.vault.save(this.profile.id,this.callbacks.snapshot());}
- logout(){this.save();if(this.recoveryTimer){clearInterval(this.recoveryTimer);this.recoveryTimer=null;}this.callbacks.logout();this.profile=null;this.pending=null;this.pin='';this.hasEnteredFlight=false;this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;this.$('header-session').hidden=true;this.$('auth-panel').hidden=false;this.$('recover-rest').disabled=false;this.$('recovery-progress').value=0;this.navigate(1);}
+ logout(){this.save();if(this.recoveryTimer){clearInterval(this.recoveryTimer);this.recoveryTimer=null;}this.callbacks.logout();this.profile=null;this.pending=null;this.pin='';this.hasEnteredFlight=false;this.missionLaunched=false;this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;this.$('header-session').hidden=true;this.$('auth-panel').hidden=false;this.$('recover-rest').disabled=false;this.$('recovery-progress').value=0;this.navigate(1);}
 }

@@ -56,3 +56,12 @@ test('critical profile recovers through a timed demo protocol with a separate re
 test('biometric/badge button is explicitly a local demo and radiation holds cannot be bypassed by recovery',()=>{
  const b=browser();b.value("portal.choose('c2')");b.click('badge-login');assert.equal(b.value('portal.profile.id'),'c2');assert.ok(b.elements['session-method'].textContent.includes('демонстрация'));examineAll(b);b.value("mission.monitor.members[1].dose=.12;updateRadiationWatch(mission.monitor.members[1]);render()");b.click('recover-rest');for(let i=0;i<15;i++)b.tick();assert.equal(b.value('mission.monitor.members[1].dose'),.12);assert.equal(b.elements['to-flight-tasks'].disabled,true);assert.ok(b.elements['recovery-feedback'].textContent.includes('Радиационное'));
 });
+test('simple flow checks the whole crew once and actually starts and completes the mission',()=>{
+ const b=browser();profileLogin(b);b.click('quick-exam');assert.equal(b.value('medicalBook.exams.length'),4);assert.equal(b.elements['to-flight-tasks'].disabled,false);b.click('to-flight-tasks');assert.equal(b.value('portal.missionLaunched'),true);for(let i=0;i<6;i++)b.tick();assert.equal(b.value('mission.elapsed'),6);assert.ok(b.elements['simple-mission-status'].textContent.includes('Миссия'));for(let i=6;i<90;i++)b.tick();assert.equal(b.elements.result.hidden,false);assert.ok(b.value('mission.completed.length')>0);
+});
+test('saved pause is visibly resumable and the launch button restarts the timer',()=>{
+ const b=browser();profileLogin(b);b.click('quick-exam');b.click('to-flight-tasks');for(let i=0;i<5;i++)b.tick();b.click('pause');const elapsed=b.value('mission.elapsed');b.click('logout');profileLogin(b);assert.equal(b.value('paused'),true);assert.equal(b.value('portal.missionLaunched'),false);assert.ok(b.elements['simple-mission-status'].textContent.includes('паузе'));b.click('to-flight-tasks');assert.equal(b.value('paused'),false);b.tick();assert.equal(b.value('mission.elapsed'),elapsed+1);
+});
+test('opening the flight screen alone does not silently start a mission',()=>{
+ const b=browser();profileLogin(b);b.click('quick-exam');b.click('step-button-3');b.tick();assert.equal(b.value('mission.elapsed'),0);assert.equal(b.value('mission.preflight'),null);assert.equal(b.elements['launch-mission'].hidden,false);b.click('launch-mission');b.tick();assert.equal(b.value('mission.elapsed'),1);
+});

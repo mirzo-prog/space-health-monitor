@@ -18,7 +18,7 @@ function collectEvents(){
 }
 function setTask(id){if(mission?.assignment&&['working','paused'].includes(mission.assignment.status)){feedback('Сначала завершите или отмените текущее задание.');return;}$('task').value=id;previousRecommendation=null;render();}
 function autoPilot(){
- if(portal?.profile&&(portal.step!==3||!profileClearance(mission,portal.profile.id).allowed))return;
+ if(portal?.profile&&(!portal.missionLaunched||!profileClearance(mission,portal.profile.id).allowed))return;
  if(!$('autopilot').checked||paused||mission.finished||!dailyReady())return;
  const a=mission.assignment;
  if(a?.status==='paused'){const replacement=mission.replacementPlan();if(replacement?.ready)mission.replace();return;}
@@ -114,7 +114,7 @@ function start(name){
  if(medicalUI)medicalUI.setContext(mission,medicalBook);else medicalUI=new DailyMedicalUI(mission,medicalBook,()=>{mission.syncDailyExams();autoPilot();render();},executeDailyRow);
  if(portal?.profile){medicalUI.$('medical-member').value=portal.profile.id;medicalUI.render();}
  if(!scene)scene=new MissionScene($('mission-3d'),$('scene-fallback'));autoPilot();render();
- timer=setInterval(()=>{if(paused)return;if(portal?.profile&&portal.step!==3&&mission.elapsed===0&&!portal.hasEnteredFlight){portal.refresh();return;}mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
+ timer=setInterval(()=>{if(paused)return;if(portal?.profile&&!portal.missionLaunched){portal.refresh();return;}mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
 }
 function finish(){
  clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();report.createdAt=new Date().toISOString();if(portal?.profile)report.operator={id:portal.profile.id,name:portal.profile.name};
@@ -158,6 +158,7 @@ function savePersonalState(){
  return {mission:mission.report(),preflight:structuredClone(mission.preflight),event:structuredClone(mission.event),selectedId,task:$('task').value,autopilot:$('autopilot').checked,paused,rosterName:initialName};
 }
 function openPersonalProfile(profile,saved){
+ portal.missionLaunched=false;
  $('autopilot').checked=false;
  if(saved?.mission?.scenario&&missionScenarios[saved.mission.scenario])$('scenario').value=saved.mission.scenario;
  start(portal.profiles[0].name);
@@ -187,6 +188,30 @@ function recoveryReview(id,stabilize=false){
 }
 portal=new CrewPortal({
  login:openPersonalProfile,
+ hasProgress:()=>!!mission&&mission.elapsed>0&&!mission.finished,
+ redraw:()=>{drawCharts();medicalUI?.renderHistory();},
+ launch:()=>{
+  if(!mission)return {started:false,message:'Сначала выберите профиль.'};
+  if(!dailyReady())return {started:false,message:'Нажмите «Пройти учебный медосмотр экипажа» на шаге 2.'};
+  const clearance=profileClearance(mission,portal.profile.id);
+  if(!clearance.allowed&&mission.elapsed===0)return {started:false,message:'Запуск ограничен: '+clearance.reasons.join('; ')+'. Пройдите протокол восстановления на шаге 2.'};
+  if(mission.finished){start(initialName);}
+  paused=false;$('pause').textContent='Пауза';$('autopilot').checked=true;portal.missionLaunched=true;
+  if(!mission.operatorAllowed($('task').value)&&mission.operatorAllowed('research'))$('task').value='research';
+  autoPilot();render();return {started:true,message:'Миссия запущена. Подбор группы, проверка готовности и задания выполняются автоматически.'};
+ },
+ launchStatus:()=>{
+  if(!mission)return;let title,help;
+  if(mission.finished){title='Миссия завершена';help='Откройте отчёт или запустите новую миссию.';}
+  else if(paused){title='Миссия на паузе';help='Нажмите «Продолжить миссию», чтобы таймер и задания снова работали.';}
+  else if(!portal.missionLaunched){title=mission.elapsed?'Сохранённая миссия ожидает продолжения':'Готово к запуску';help=dailyReady()?'Нажмите «Запустить миссию». Автоматика выполнит остальные действия.':'Сначала нажмите кнопку учебного медосмотра на шаге 2.';}
+  else if(!dailyReady()){title='Ожидание ежедневного осмотра';help='Не все участники прошли сегодняшний осмотр. Вернитесь к шагу 2 и нажмите кнопку осмотра.';}
+  else if(mission.assignment?.status==='paused'){title='Задание приостановлено — идёт наблюдение';help=(mission.assignment.pauseReason||'Проверяется безопасность экипажа')+' Таймер продолжает идти; задание возобновится после восстановления или допустимой замены.';}
+  else if(mission.preflight?.status==='testing'){title='Проверка готовности группы';help='Автоматическая проба нагрузки: '+(mission.elapsed-mission.preflight.started)+' из 4 секунд. После проверки задание начнётся само.';}
+  else if(mission.assignment?.status==='working'){title='Миссия идёт: '+tasks[mission.assignment.taskId].name;help='Группа: '+names(mission.assignment.ids)+'. Выполнено '+mission.assignment.progress+' из '+tasks[mission.assignment.taskId].duration+' секунд задания.';}
+  else{title='Миссия идёт — подбор следующего задания';help=assessment.ready?'Автоматически выбирается группа и проверяется готовность.':assessment.reason+' Подробные причины доступны в медицинских данных.';}
+  $('simple-mission-status').textContent=title;$('simple-mission-help').textContent=help;$('simple-mission-fill').style.width=(mission.elapsed/mission.duration*100)+'%';$('launch-mission').textContent=mission.finished?'Начать новую миссию':paused||mission.elapsed?'Продолжить миссию':'Запустить миссию';$('launch-mission').hidden=!!portal.missionLaunched&&!paused&&!mission.finished;
+ },
  running:()=>!!mission&&mission.elapsed>0&&!mission.finished,
  scenario:()=>{if(mission.elapsed>0&&!mission.finished)return;start(initialName);portal.navigate(3);},
  logout:()=>{clearInterval(timer);$('dashboard').hidden=true;$('result').hidden=true;},
