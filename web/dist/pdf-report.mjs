@@ -1,0 +1,58 @@
+// Offline PDF export. Canvas renders Cyrillic using browser fonts; JPEG pages are
+// embedded in a standards-based PDF container without external libraries/services.
+export function buildPdfBytes(images){
+ if(!images.length)throw Error('Нет страниц для PDF.');
+ const encoder=new TextEncoder(),chunks=[],offsets=[0];let size=0;
+ const append=value=>{const bytes=typeof value==='string'?encoder.encode(value):value;chunks.push(bytes);size+=bytes.length;};
+ const object=(id,body)=>{offsets[id]=size;append(`${id} 0 obj\n`);append(body);append('\nendobj\n');};
+ append('%PDF-1.4\n% ALPHA medical mission report\n');
+ object(1,'<< /Type /Catalog /Pages 2 0 R >>');
+ object(2,`<< /Type /Pages /Count ${images.length} /Kids [${images.map((_,i)=>`${3+i*3} 0 R`).join(' ')}] >>`);
+ images.forEach((image,i)=>{const page=3+i*3,bitmap=page+1,content=page+2;
+  object(page,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im${i} ${bitmap} 0 R >> >> /Contents ${content} 0 R >>`);
+  offsets[bitmap]=size;append(`${bitmap} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${image.bytes.length} >>\nstream\n`);append(image.bytes);append('\nendstream\nendobj\n');
+  const commands=`q\n595.28 0 0 841.89 0 0 cm\n/Im${i} Do\nQ\n`;
+  object(content,`<< /Length ${encoder.encode(commands).length} >>\nstream\n${commands}endstream`);
+ });
+ const xref=size,count=3+images.length*3;append(`xref\n0 ${count}\n0000000000 65535 f \n`);for(let id=1;id<count;id++)append(String(offsets[id]).padStart(10,'0')+' 00000 n \n');append(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+ const result=new Uint8Array(size);let offset=0;for(const bytes of chunks){result.set(bytes,offset);offset+=bytes.length;}return result;
+}
+export function reportContent(report,taskNames,scenarioNames){
+ if(!report||!Array.isArray(report.crew))throw Error('Сначала завершите миссию, чтобы сформировать отчёт.');
+ const blocks=[],text=(value)=>blocks.push({type:'text',value:String(value)}),heading=value=>blocks.push({type:'heading',value}),table=(columns,rows,widths)=>blocks.push({type:'table',columns,rows,widths});
+ const names=ids=>(ids||[]).map(id=>report.crew.find(m=>m.id===id)?.name||id).join(', ');
+ const time=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
+ heading('Итоги миссии');text('Сценарий: '+(scenarioNames[report.scenario]||report.scenario));text(`Длительность наблюдения: ${time(report.seconds)}. Выполнено заданий: ${report.completed?.length||0}. Замен экипажа: ${report.replacements||0}.`);text('Создан: '+(report.createdAt||new Date().toISOString()));text('Учебная симуляция. Все данные и пороги искусственные; документ не является медицинским заключением.');
+ heading('Медицинская сводка экипажа');
+ for(const member of report.crew){const valid=(member.history||[]).filter(s=>s.trusted);text(member.name+' / '+(member.role||''));text(valid.length?`Пульс ${Math.min(...valid.map(s=>s.values.heart_rate))}–${Math.max(...valid.map(s=>s.values.heart_rate))} уд/мин; минимум SpO₂ ${Math.min(...valid.map(s=>s.values.spO2))}%; максимум фона ${Math.max(...valid.map(s=>s.values.radiation_level)).toFixed(2)} мкЗв/ч.`:'Доверенных замеров за миссию нет.');text(`Усталость ${Math.round(member.fatigue)}%. Учтённая доза ${member.dose.toFixed(4)} мкЗв. Без измерений: ${member.unknownDoseSeconds||0} с (не включены в дозу).`);text(member.radiationWatch?.active?(member.radiationWatch.doseHold?'Радиационное ограничение по суммарной дозе. Нужен пересмотр допуска.':'Защитное наблюдение по фону; назначения ограничены.'):'Активного радиационного ограничения нет.');if(member.symptoms?.length)text('Жалобы: '+member.symptoms.map(s=>s.text).join('; '));}
+ heading('Назначения и выполнение заданий');
+ const assignments=[...(report.completed||[])];if(report.assignment&&!assignments.some(a=>a.started===report.assignment.started&&a.taskId===report.assignment.taskId))assignments.push(report.assignment);
+ const statuses={completed:'Выполнено',working:'Выполнялось',paused:'Приостановлено',interrupted:'Прервано',cancelled:'Отменено'};
+ if(!assignments.length)text('Задания не назначались.');
+ for(const a of assignments){text(`${taskNames[a.taskId]||a.taskId}: ${statuses[a.status]||a.status}. Активное выполнение: ${a.progress} с.`);text('Группа: '+names(a.ids)+'. Резерв: '+names([a.reserveId])+'.');for(const r of a.replacements||[])text(`Замена ${time(r.second)}: ${names(r.old)} → ${names(r.new)}.`);}
+ heading('Ежедневные медосмотры и динамика');
+ const exams=report.dailyMedical?.exams||[];
+ if(!exams.length)text('Ежедневные осмотры не записаны.');
+ for(const member of report.crew){const history=exams.filter(e=>e.memberId===member.id).sort((a,b)=>a.day.localeCompare(b.day));if(!history.length)continue;heading(member.name);const current=history.at(-1),previous=history.at(-2);text(`Последний осмотр: ${current.day}; источник: ${current.source==='simulation'?'симуляция':'ручной ввод'}; измерения ${current.trusted?'достоверные':'недостоверные'}.`);if(previous)text(`Изменения относительно ${previous.day}: пульс ${(current.values.heart_rate-previous.values.heart_rate).toFixed(1)} уд/мин; SpO₂ ${(current.values.spO2-previous.values.spO2).toFixed(1)} п.п.; фон ${(current.values.radiation_level-previous.values.radiation_level).toFixed(3)} мкЗв/ч; усталость ${(current.fatigue-previous.fatigue).toFixed(1)} п.п.; доза ${(current.dose-previous.dose).toFixed(4)} мкЗв.`);else text('Первый сохранённый осмотр: предыдущего результата для сравнения нет.');if(current.notes)text('Заметки: '+current.notes);if(history.length>30)text('В таблице последние 30 осмотров; полный журнал доступен в JSON-архиве.');table(['Дата','Пульс','SpO₂ %','Фон','Устал. %','Доза'],history.slice(-30).map(e=>[e.day,e.values.heart_rate,e.values.spO2,e.values.radiation_level,e.fatigue,e.dose.toFixed(4)]),[.23,.14,.14,.16,.15,.18]);blocks.push({type:'charts',name:member.name,history:history.slice(-14)});}
+ heading('Планы дня по результатам осмотров');
+ const plans=Object.entries(report.dailyMedical?.plans||{}).sort(([a],[b])=>a.localeCompare(b));if(!plans.length)text('Сохранённых дневных планов нет.');if(plans.length>7)text('Показаны последние 7 сохранённых дневных планов.');for(const [day,plan]of plans.slice(-7)){text(day);for(const row of plan.rows||[]){text(`${String(row.hour).padStart(2,'0')}:00 — ${taskNames[row.taskId]||row.taskId}. ${row.status==='planned'?'Группа: '+names(row.ids)+'. Резерв: '+names([row.reserveId]):'Отложено'}. ${row.reason}`);}}
+ heading('Проверки перед назначением');if(!report.preflights?.length)text('Пробы нагрузки не выполнялись.');for(const p of report.preflights||[]){text(`${time(p.started)} / ${taskNames[p.taskId]||p.taskId}: ${p.status==='passed'?'пройдена':'не пройдена'}.`);for(const r of p.results||[])text(`${r.name}: пульс ${r.before.heart_rate} → ${r.after.heart_rate}; SpO₂ ${r.before.spO2} → ${r.after.spO2}%. ${r.passed?'Проверка пройдена':r.reasons?.join('; ')||'реакция на нагрузку вне правил модели'}.`);}
+ heading('Журнал событий и решений');if(!report.timeline?.length)text('Событий нет.');for(const e of report.timeline||[])text(time(e.second)+' — '+e.text);
+ return blocks;
+}
+export async function renderReportPdf(report,taskNames,scenarioNames){
+ const blocks=reportContent(report,taskNames,scenarioNames),pages=[];let canvas,ctx,y;
+ const width=1240,height=1754,margin=78,bottom=height-100,lineHeight=29;
+ function newPage(){canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;ctx=canvas.getContext('2d');if(!ctx)throw Error('Браузер не предоставил Canvas для создания PDF.');ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);ctx.fillStyle='#17394b';ctx.fillRect(0,0,width,12);ctx.font='bold 25px Arial';ctx.fillText('ALPHA / ОТЧЁТ МОНИТОРИНГА ЭКИПАЖА',margin,70);ctx.strokeStyle='#ccd7dc';ctx.beginPath();ctx.moveTo(margin,92);ctx.lineTo(width-margin,92);ctx.stroke();y=134;pages.push(canvas);}
+ function room(space){if(y+space>bottom)newPage();}
+ function wrapped(text,maxWidth,font='22px Arial'){ctx.font=font;const result=[];for(const paragraph of String(text).split('\n')){let line='';for(const word of paragraph.split(/\s+/)){for(const char of (line?' ':'')+word){if(ctx.measureText(line+char).width>maxWidth&&line){result.push(line);line='';}line+=char;}}result.push(line);}return result;}
+ function paragraph(value){for(const line of wrapped(value,width-margin*2)){room(lineHeight);ctx.font='22px Arial';ctx.fillStyle='#263e49';ctx.fillText(line,margin,y);y+=lineHeight;}y+=12;}
+ function tableBlock(block){const total=width-margin*2,colWidths=block.widths.map(w=>w*total),headerHeight=42;
+  function header(){room(headerHeight+42);ctx.fillStyle='#e7eff2';ctx.fillRect(margin,y,total,headerHeight);let x=margin;ctx.fillStyle='#193b4d';ctx.font='bold 19px Arial';block.columns.forEach((column,i)=>{ctx.fillText(column,x+8,y+27);x+=colWidths[i];});y+=headerHeight;}
+  header();for(const row of block.rows){if(y+40>bottom){newPage();header();}let x=margin;ctx.strokeStyle='#dbe2e5';ctx.beginPath();ctx.moveTo(x,y+39);ctx.lineTo(width-margin,y+39);ctx.stroke();ctx.font='19px Arial';ctx.fillStyle='#263e49';row.forEach((value,i)=>{ctx.fillText(String(value),x+8,y+27);x+=colWidths[i];});y+=40;}y+=18;
+ }
+ function chart(history,key,title,x,top,w,h){ctx.strokeStyle='#dbe2e5';ctx.strokeRect(x,top,w,h);ctx.fillStyle='#193b4d';ctx.font='bold 18px Arial';ctx.fillText(title,x+14,top+25);const values=history.map(e=>e.values[key]??e[key]),max=(Math.max(...values)>0?Math.max(...values):1)*1.15,left=x+40,baseline=top+h-38,plotH=h-90,step=(w-60)/values.length;ctx.font='14px Arial';ctx.fillStyle='#687d87';ctx.fillText('0',x+12,baseline);ctx.fillText(max.toFixed(max<1?3:0),x+8,top+53);history.forEach((e,i)=>{const barH=values[i]/max*plotH;ctx.fillStyle=e.trusted?'#238d85':'#ca3d51';ctx.fillRect(left+i*step,baseline-barH,Math.max(2,step*.65),barH);if(history.length<=5||i===0||i===history.length-1){ctx.fillStyle='#4d6470';ctx.fillText(e.day.slice(5),left+i*step-4,baseline+21);}});}
+ newPage();for(const block of blocks){if(block.type==='heading'){room(100);y+=12;ctx.fillStyle='#17394b';ctx.font='bold 29px Arial';for(const line of wrapped(block.value,width-margin*2,'bold 29px Arial')){room(40);ctx.font='bold 29px Arial';ctx.fillText(line,margin,y);y+=38;}y+=10;}else if(block.type==='text')paragraph(block.value);else if(block.type==='table')tableBlock(block);else if(block.type==='charts'){room(370);const w=(width-margin*2-20)/2;chart(block.history,'heart_rate','Пульс по дням · уд/мин',margin,y,w,170);chart(block.history,'spO2','SpO₂ по дням · %',margin+w+20,y,w,170);chart(block.history,'radiation_level','Радиационный фон · мкЗв/ч',margin,y+184,w,170);chart(block.history,'dose','Накопленная доза · мкЗв',margin+w+20,y+184,w,170);y+=375;paragraph('Диаграммы: последние 14 осмотров. Красный цвет — недостоверные данные. Пропуски дней не заполняются.');}}
+ const images=[];for(let i=0;i<pages.length;i++){const page=pages[i],context=page.getContext('2d');context.font='17px Arial';context.fillStyle='#6c7f88';context.fillText('Учебная симуляция / ALPHA',margin,height-48);context.fillText(`Страница ${i+1} из ${pages.length}`,width-260,height-48);const uri=page.toDataURL('image/jpeg',.92);if(!uri.startsWith('data:image/jpeg;base64,'))throw Error('Браузер не смог подготовить страницу PDF.');const binary=atob(uri.split(',')[1]),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));images.push({width,height,bytes});await new Promise(resolve=>setTimeout(resolve,0));}
+ return new Blob([buildPdfBytes(images)],{type:'application/pdf'});
+}

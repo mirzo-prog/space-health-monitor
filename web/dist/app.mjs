@@ -1,3 +1,4 @@
+import {renderReportPdf} from './pdf-report.mjs';
 import {DailyMedicalBook} from './daily-medical.mjs';
 import {DailyMedicalUI} from './daily-ui.mjs';
 import {MissionControl,tasks,missionScenarios,assessCrew,riskOf,eventDescription,radiationRules} from './crew.mjs';
@@ -112,7 +113,7 @@ function start(name){
  timer=setInterval(()=>{if(paused)return;mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
 }
 function finish(){
- clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();
+ clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();report.createdAt=new Date().toISOString();
  $('dashboard').hidden=true;$('result').hidden=false;$('result-name').textContent=initialName;$('result-score').textContent=mission.completed.length;$('result-resolved').textContent=mission.replacements;$('result-mistakes').textContent=mission.elapsed;
  $('result-note').textContent=`Сценарий: ${missionScenarios[mission.scenario].name}. ${mission.completed.length} заданий выполнено. ${mission.assignment?.status==='interrupted'?'Последнее задание прервано окончанием наблюдения.':''}`;
  $('selection-summary').textContent='Последняя оценка: '+assessment.explanation;$('medical-summary').textContent='Разбор включает весь экипаж, а не только открытого участника.';
@@ -131,6 +132,10 @@ $('autopilot').addEventListener('change',()=>{autoPilot();render();});
 $('pause').addEventListener('click',()=>{paused=!paused;$('pause').textContent=paused?'Продолжить':'Пауза';render();});$('finish').addEventListener('click',finish);
 $('back-monitor').addEventListener('click',()=>{$('result').hidden=true;$('dashboard').hidden=false;$('pause').disabled=true;$('finish').disabled=true;render();});
 $('restart').addEventListener('click',()=>start(initialName));
+$('download-pdf').addEventListener('click',async()=>{
+ const button=$('download-pdf');button.disabled=true;$('pdf-feedback').textContent='Подготовка PDF…';
+ try{const blob=await renderReportPdf(report,Object.fromEntries(Object.entries(tasks).map(([id,t])=>[id,t.name])),Object.fromEntries(Object.entries(missionScenarios).map(([id,s])=>[id,s.name])));const url=URL.createObjectURL(blob),a=node('a');a.href=url;a.download='alpha-crew-report-'+(report.createdAt||new Date().toISOString()).slice(0,10)+'.pdf';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);$('pdf-feedback').textContent='PDF готов. Файл передан браузеру для скачивания.';}catch(error){$('pdf-feedback').textContent='Не удалось создать PDF: '+error.message;}finally{button.disabled=false;}
+});
 $('download').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=node('a');a.href=url;a.download='alpha-crew-mission.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 function dailyReady(){return mission.monitor.members.every(m=>medicalBook.get(medicalBook.today(),m.id));}
 function executeDailyRow(row,day){

@@ -9,7 +9,7 @@ class Element{
 }
 function browser(scenario='station',auto=true){
  const elements=Object.fromEntries([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()]));elements.scenario.value=scenario;elements.task.value='repair';elements.name.value='<Мирзо>';elements.autopilot.checked=auto;
- let tick;const context={document:{getElementById:id=>{assert.ok(elements[id],id);return elements[id]},createElement:()=>new Element(),createTextNode:text=>text,querySelectorAll:selector=>Array.from({length:selector==='.metric'?3:5},()=>new Element())},window:{addEventListener(){},localStorage:{data:{},getItem(key){return this.data[key]||null;},setItem(key,value){this.data[key]=value;}}},setInterval:fn=>{tick=fn;return 1},clearInterval(){},console,Blob,URL,setTimeout,structuredClone};
+ let tick;const context={document:{getElementById:id=>{assert.ok(elements[id],id);return elements[id]},createElement:()=>new Element(),createTextNode:text=>text,querySelectorAll:selector=>Array.from({length:selector==='.metric'?3:5},()=>new Element())},window:{addEventListener(){},localStorage:{data:{},getItem(key){return this.data[key]||null;},setItem(key,value){this.data[key]=value;}}},setInterval:fn=>{tick=fn;return 1},clearInterval(){},console,Blob,URL,setTimeout,structuredClone,TextEncoder,atob};
  vm.createContext(context);vm.runInContext(html.split('<script>')[1].split('</script>')[0],context);
  return {elements,context,start(){elements.entry.listeners.submit({preventDefault(){}})},tick(){tick();},click(id){elements[id].listeners.click();},value(code){return vm.runInContext(code,context);}};
 }
@@ -31,4 +31,13 @@ test('daily UI locks duplicate exams, persists history, builds plans and prepare
 });
 test('daily calendar history adds comparisons and records manual results without inventing days',()=>{
  const b=browser('station',false);b.start();const old=b.value("new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-2,12)");const day=b.value('localDay(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-2,12))');b.elements['medical-day'].value=day;b.elements['medical-day'].listeners.change();assert.equal(b.elements['exam-hr'].value,'');for(const [id,value]of Object.entries({'exam-hr':70,'exam-oxygen':98,'exam-radiation':.6,'exam-fatigue':12,'exam-dose':0}))b.elements[id].value=String(value);b.elements['daily-exam-form'].listeners.submit({preventDefault(){}});assert.equal(b.value('medicalBook.exams.length'),1);b.elements['medical-day'].value=b.value('medicalBook.today()');b.elements['medical-day'].listeners.change();b.elements['daily-exam-form'].listeners.submit({preventDefault(){}});assert.equal(b.value("medicalBook.history('c1').length"),2);assert.ok(b.elements['daily-comparison'].children.length>=5);assert.equal(b.elements['daily-history-body'].children.length,2);
+});
+
+test('PDF download button exports a .pdf file and restores button state',async()=>{
+ const b=browser('station',false);b.start();examineAll(b);b.click('finish');
+ const drawn={fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},strokeRect(){},measureText:s=>({width:String(s).length*12}),fillText(){}};
+ let downloaded='';
+ b.context.setTimeout=fn=>{fn();return 1;};b.context.document.body=new Element();
+ b.context.document.createElement=tag=>{const el=new Element();if(tag==='canvas'){el.getContext=()=>drawn;el.toDataURL=()=> 'data:image/jpeg;base64,/9j/2Q==';}if(tag==='a'){el.click=()=>downloaded=el.download;el.remove=()=>{};}return el;};
+ await b.elements['download-pdf'].listeners.click();assert.ok(downloaded.endsWith('.pdf'));assert.ok(downloaded.startsWith('alpha-crew-report-'));assert.equal(b.elements['download-pdf'].disabled,false);assert.ok(b.elements['pdf-feedback'].textContent.includes('PDF готов'));
 });
