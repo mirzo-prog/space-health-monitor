@@ -3269,5 +3269,135 @@ export const languageMessages=[
   "Резерв",
   "Reserve",
   "Zaxira"
+ ],
+ [
+  "ВАШ КОСМОНАВТ",
+  "YOUR ASTRONAUT",
+  "SIZNING KOSMONAVTINGIZ"
+ ],
+ [
+  "Подробнее: графики, экипаж и настройки",
+  "More: charts, crew and settings",
+  "Batafsil: grafiklar, ekipaj va sozlamalar"
+ ],
+ [
+  "Здоровье",
+  "Health",
+  "Salomatlik"
+ ],
+ [
+  "Задания",
+  "Tasks",
+  "Vazifalar"
+ ],
+ [
+  "Пройти осмотр",
+  "Run checkup",
+  "Ko‘rikdan o‘tish"
+ ],
+ [
+  "Начать миссию",
+  "Start mission",
+  "Missiyani boshlash"
+ ],
+ [
+  "Начать восстановление",
+  "Start recovery",
+  "Tiklanishni boshlash"
+ ],
+ [
+  "Посмотреть причину",
+  "View reason",
+  "Sababini ko‘rish"
+ ],
+ [
+  "Открыть отчёт PDF",
+  "Open PDF report",
+  "PDF hisobotini ochish"
+ ],
+ [
+  "Нужен осмотр",
+  "Checkup needed",
+  "Ko‘rik kerak"
+ ],
+ [
+  "Готов",
+  "Ready",
+  "Tayyor"
+ ],
+ [
+  "На миссии",
+  "On mission",
+  "Missiyada"
+ ],
+ [
+  "Нужен отдых",
+  "Rest needed",
+  "Dam olish kerak"
+ ],
+ [
+  "Работы запрещены",
+  "Work prohibited",
+  "Ishlar taqiqlangan"
+ ],
+ [
+  "Работы приостановлены",
+  "Work suspended",
+  "Ishlar to‘xtatilgan"
+ ],
+ [
+  "Идёт восстановление",
+  "Recovery in progress",
+  "Tiklanish davom etmoqda"
+ ],
+ [
+  "Восстановление: ",
+  "Recovery: ",
+  "Tiklanish: "
+ ],
+ [
+  "Дождитесь повторной проверки. Радиационная доза не обнуляется.",
+  "Wait for the recheck. Radiation dose is not reset.",
+  "Qayta tekshiruvni kuting. Radiatsiya dozasi nolga tushmaydi."
+ ],
+ [
+  "Результаты готовы. Можно сохранить PDF и посмотреть подробности.",
+  "Results ready. Save a PDF or view details.",
+  "Natijalar tayyor. PDFni saqlang yoki tafsilotlarni ko‘ring."
+ ],
+ [
+  "Проверьте экипаж одним нажатием. Результаты за сегодня сохранятся.",
+  "Check the crew with one click. Today’s results will be saved.",
+  "Ekipajni bir bosishda tekshiring. Bugungi natijalar saqlanadi."
+ ],
+ [
+  "Допуск получен. Проверку группы и выполнение заданий система проведёт сама.",
+  "Clearance granted. The system handles team checks and task execution.",
+  "Ruxsat berildi. Guruh tekshiruvi va vazifalarni tizim o‘zi bajaradi."
+ ],
+ [
+  "Продолжить наблюдение",
+  "Resume monitoring",
+  "Kuzatuvni davom ettirish"
+ ],
+ [
+  "Наблюдение продолжится. Задания останутся заблокированы до восстановления показателей.",
+  "Monitoring will resume. Tasks stay blocked until readings recover.",
+  "Kuzatuv davom etadi. Ko‘rsatkichlar tiklanguncha vazifalar bloklangan holda qoladi."
+ ],
+ [
+  "Подготовка миссии",
+  "Mission preparation",
+  "Missiyaga tayyorgarlik"
+ ],
+ [
+  "Полный разбор миссии",
+  "Full mission debrief",
+  "Missiyaning to‘liq tahlili"
+ ],
+ [
+  " Суммарная доза: ",
+  " Cumulative dose: ",
+  " Jami doza: "
  ]
 ];

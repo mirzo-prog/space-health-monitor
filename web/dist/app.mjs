@@ -6,7 +6,7 @@ import {DailyMedicalUI} from './daily-ui.mjs';
 import {MissionControl,tasks,missionScenarios,assessCrew,riskOf,eventDescription,radiationRules} from './crew.mjs';
 import {MissionScene} from './scene3d.mjs';
 const $=id=>document.getElementById(id);
-let mission,timer,selectedId,assessment,paused=false,report,initialName,previousRecommendation,seenEvents=0,scene,medicalBook,medicalUI,portal;
+let mission,timer,selectedId,assessment,paused=false,report,initialName,previousRecommendation,seenEvents=0,scene,medicalBook,medicalUI,portal,missionSummaryText='';
 const charts=[['hr-chart','heart_rate','#61e2d3',40,145],['spo2-chart','spO2','#93aaff',85,100],['rad-chart','radiation_level','#efba73',0,10]];
 const format=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
@@ -119,7 +119,7 @@ function start(name){
 }
 function finish(){
  clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();report.createdAt=new Date().toISOString();if(portal?.profile)report.operator={id:portal.profile.id,name:portal.profile.name};
- $('dashboard').hidden=true;$('result').hidden=false;$('result-name').textContent=initialName;$('result-score').textContent=mission.completed.length;$('result-resolved').textContent=mission.replacements;$('result-mistakes').textContent=mission.elapsed;
+ $('dashboard').hidden=true;$('result').hidden=false;$('result-name').textContent=portal?.profile?.name||initialName;$('result-score').textContent=mission.completed.length;$('result-resolved').textContent=mission.replacements;$('result-mistakes').textContent=mission.elapsed;
  $('result-note').textContent=`Сценарий: ${missionScenarios[mission.scenario].name}. ${mission.completed.length} заданий выполнено. ${mission.assignment?.status==='interrupted'?'Последнее задание прервано окончанием наблюдения.':''}`;
  $('selection-summary').textContent='Последняя оценка: '+assessment.explanation;$('medical-summary').textContent='Разбор включает весь экипаж, а не только открытого участника.';
  $('report-crew').replaceChildren();for(const m of mission.monitor.members){const card=node('article',undefined,'report-member'),trusted=m.history.filter(s=>s.trusted);card.append(node('h3',m.name),node('p',trusted.length?`Пульс: ${Math.min(...trusted.map(s=>s.values.heart_rate))}–${Math.max(...trusted.map(s=>s.values.heart_rate))}. Минимум SpO₂: ${Math.min(...trusted.map(s=>s.values.spO2))}%.`:'Нет доверенных измерений.'),node('p',`Усталость ${Math.round(m.fatigue)}%. Учтённая доза ${m.dose.toFixed(4)} мкЗв; ${m.unknownDoseSeconds||0} с пропущенных измерений.`));$('report-crew').append(card);}
@@ -189,6 +189,9 @@ function recoveryReview(id,stabilize=false){
 }
 portal=new CrewPortal({
  login:openPersonalProfile,
+ compactState:()=>({allExamined:dailyReady(),elapsed:mission.elapsed,finished:mission.finished,paused,percent:mission.elapsed/mission.duration*100,task:mission.assignment?tasks[mission.assignment.taskId].name:'Подготовка миссии',message:missionSummaryText}),
+ pause:()=>{$('pause').click();},
+ report:()=>{finish();$('download-pdf').click();},
  hasProgress:()=>!!mission&&mission.elapsed>0&&!mission.finished,
  redraw:()=>{drawCharts();medicalUI?.renderHistory();},
  launch:()=>{
@@ -211,7 +214,7 @@ portal=new CrewPortal({
   else if(mission.preflight?.status==='testing'){title='Проверка готовности группы';help='Автоматическая проба нагрузки: '+(mission.elapsed-mission.preflight.started)+' из 4 секунд. После проверки задание начнётся само.';}
   else if(mission.assignment?.status==='working'){title='Миссия идёт: '+tasks[mission.assignment.taskId].name;help='Группа: '+names(mission.assignment.ids)+'. Выполнено '+mission.assignment.progress+' из '+tasks[mission.assignment.taskId].duration+' секунд задания.';}
   else{title='Миссия идёт — подбор следующего задания';help=assessment.ready?'Автоматически выбирается группа и проверяется готовность.':assessment.reason+' Подробные причины доступны в медицинских данных.';}
-  $('simple-mission-status').textContent=title;$('simple-mission-help').textContent=help;$('simple-mission-fill').style.width=(mission.elapsed/mission.duration*100)+'%';$('launch-mission').textContent=mission.finished?'Начать новую миссию':paused||mission.elapsed?'Продолжить миссию':'Запустить миссию';$('launch-mission').hidden=!!portal.missionLaunched&&!paused&&!mission.finished;
+  missionSummaryText=help;$('simple-mission-status').textContent=title;$('simple-mission-help').textContent=help;$('simple-mission-fill').style.width=(mission.elapsed/mission.duration*100)+'%';$('launch-mission').textContent=mission.finished?'Начать новую миссию':paused||mission.elapsed?'Продолжить миссию':'Запустить миссию';$('launch-mission').hidden=!!portal.missionLaunched&&!paused&&!mission.finished;
  },
  running:()=>!!mission&&mission.elapsed>0&&!mission.finished,
  scenario:()=>{if(mission.elapsed>0&&!mission.finished)return;start(initialName);portal.navigate(3);},

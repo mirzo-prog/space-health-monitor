@@ -25,6 +25,9 @@ export class CrewPortal{
   const keypad=this.$('pin-keypad');for(const digit of ['1','2','3','4','5','6','7','8','9','clear','0','back']){const b=portalElement('button',digit==='clear'?'Сброс':digit==='back'?'⌫':digit,'pin-key');b.type='button';b.setAttribute('aria-label',digit==='back'?'Удалить последнюю цифру':digit==='clear'?'Очистить PIN':'Цифра '+digit);b.addEventListener('click',()=>this.input(digit));keypad.append(b);}
   this.$('badge-login').addEventListener('click',()=>this.authenticate('demo-badge'));
   this.$('pin-cancel').addEventListener('click',()=>{this.pending=null;this.pin='';this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;});
+  this.$('compact-primary').addEventListener('click',()=>this.primaryAction());
+  this.$('compact-health-tab').addEventListener('click',()=>this.navigate(2));this.$('compact-tasks-tab').addEventListener('click',()=>this.navigate(3));
+  this.$('compact-details').addEventListener('toggle',()=>this.callbacks.redraw?.());
   this.$('logout').addEventListener('click',()=>this.logout());
   for(const step of [1,2,3])this.$('step-button-'+step).addEventListener('click',()=>this.navigate(step));
   this.$('to-flight-tasks').addEventListener('click',()=>this.launch());this.$('launch-mission').addEventListener('click',()=>this.launch());this.$('quick-exam').addEventListener('click',()=>{const result=this.callbacks.examineCrew();this.$('launch-feedback').textContent=result;this.refresh();});this.$('back-to-health').addEventListener('click',()=>this.navigate(2));this.$('start-scenario').addEventListener('click',()=>this.callbacks.scenario());
@@ -43,8 +46,11 @@ export class CrewPortal{
   for(const selector of ['.daily-medical','.diagnostics','.crew-selection','.lower-grid','.disclaimer']){const el=document.querySelector(selector);if(el)this.$('advanced-health-content').append(el);}
   for(const selector of ['.scene-panel']){const el=document.querySelector(selector);if(el)flight.append(el);}
   for(const selector of ['#scenario-controls','.daily-planning','.assignment-panel']){const el=document.querySelector(selector);if(el)this.$('advanced-flight-content').append(el);}
-  for(const id of ['advanced-health','advanced-flight'])this.$(id).addEventListener('toggle',()=>this.callbacks.redraw?.());
-  const scenarios=document.querySelector('.scenario-picker');if(scenarios)this.$('scenario-picker-slot').append(scenarios);document.body.classList.add('portal-active');
+  for(const id of ['advanced-health','advanced-flight']){this.$(id).open=true;this.$(id).addEventListener('toggle',()=>this.callbacks.redraw?.());}
+  const scenarios=document.querySelector('.scenario-picker');if(scenarios)this.$('scenario-picker-slot').append(scenarios);for(const id of ['step-health','step-flight'])this.$('compact-details-content').append(this.$(id));
+  for(const id of ['medical-summary','selection-summary','report-crew','report-timeline','download'])this.$('compact-report-content').append(this.$(id));
+  const reportHeading=document.querySelector('#result > h2');if(reportHeading)this.$('compact-report-content').append(reportHeading);
+  document.body.classList.add('portal-active');document.body.classList.add('compact-mode');
  }
  choose(id){this.pending=this.profiles.find(p=>p.id===id);if(!this.pending)return;this.pin='';this.$('profile-cards').hidden=true;this.$('pin-screen').hidden=false;this.$('pin-person').textContent=this.pending.name+' / '+this.pending.role;this.$('pin-message').textContent='Учебный PIN для всех профилей: 1234. Или используйте демонстрацию ID-бейджа.';this.drawPin();}
  drawPin(){this.$('pin-dots').textContent='●'.repeat(this.pin.length)+'○'.repeat(4-this.pin.length);this.$('pin-dots').setAttribute('aria-label','Введено цифр: '+this.pin.length+' из 4');}
@@ -68,15 +74,43 @@ export class CrewPortal{
   const missingExam=!status.member?.dailyExam||status.member.dailyExam.day!==status.member.medicalDay;this.$('recovery-panel').hidden=can||missingExam;if(missingExam)this.$('clearance-status').textContent='Для допуска запишите обязательный медосмотр за сегодня.';this.$('recovery-warning').textContent='Выход в открытый космос и тяжёлые работы приостановлены. Учебная передача телеметрии в медблок ЦУП отмечается в журнале; реальной связи с Землёй нет.';
   const alertKey=this.profile.id+':'+status.reasons.join('|');if(!can&&!missingExam&&this.lastMedicalAlert!==alertKey){this.lastMedicalAlert=alertKey;this.callbacks.message('УЧЕБНАЯ ТЕЛЕМЕТРИЯ В МЕДБЛОК ЦУП: '+this.profile.name+'. '+status.reasons.join('; ')+'. Реальная передача не выполнялась.');}
   this.$('start-scenario').disabled=!!this.callbacks.running?.();
-  this.$('profile-storage-warning').textContent=this.vault.warning;this.callbacks.launchStatus?.();
+  this.$('profile-storage-warning').textContent=this.vault.warning;this.callbacks.launchStatus?.();this.renderCompact(status);
   if(!can&&this.step===3&&!this.missionLaunched&&!canResume){this.step=2;this.$('step-health').hidden=false;this.$('step-flight').hidden=true;this.$('step-button-2').classList.toggle('active',true);this.$('step-button-3').classList.toggle('active',false);this.$('step-hint').textContent='Допуск изменился. Вернитесь к мониторингу и повторной проверке.';}
   const progress=this.callbacks.progress(this.profile.id);this.$('personal-progress').textContent=`Личный прогресс: ${progress.completed} заданий · ${progress.seconds} с наблюдения.`;
  }
- launch(){if(!this.profile)return;const result=this.callbacks.launch();this.$('launch-feedback').textContent=result.message;if(result.started){this.missionLaunched=true;this.navigate(3);}}
+ renderCompact(clearance){
+  const member=clearance.member,state=this.callbacks.compactState?.();if(!member||!state)return;
+  this.$('compact-name').textContent=this.profile.name;this.$('compact-role').textContent=this.profile.role;
+  this.$('compact-hr').textContent=member.values.heart_rate;this.$('compact-oxygen').textContent=member.values.spO2;this.$('compact-radiation').textContent=member.values.radiation_level.toFixed(2);
+  const metricFlags=[member.values.heart_rate<50||member.values.heart_rate>100,member.values.spO2<94,member.values.radiation_level>5||member.radiationWatch?.active];document.querySelectorAll('.compact-readings article').forEach((card,i)=>card.classList.toggle('danger',!!metricFlags[i]));
+  const missing=!member.dailyExam||member.dailyExam.day!==member.medicalDay;
+  let kind,label,guidance,badge;
+  if(this.recoveryTimer){kind='recovering';label='Восстановление: '+this.remaining+' с';badge='Идёт восстановление';guidance='Дождитесь повторной проверки. Радиационная доза не обнуляется.';}
+  else if(state.finished){kind='report';label='Открыть отчёт PDF';badge='Миссия завершена';guidance='Результаты готовы. Можно сохранить PDF и посмотреть подробности.';}
+  else if(missing||!state.allExamined){kind='exam';label='Пройти осмотр';badge='Нужен осмотр';guidance='Проверьте экипаж одним нажатием. Результаты за сегодня сохранятся.';}
+  else if(state.paused&&state.elapsed){kind='start';label='Продолжить наблюдение';badge='Работы приостановлены';guidance='Наблюдение продолжится. Задания останутся заблокированы до восстановления показателей.';}
+  else if(!clearance.allowed&&(!this.missionLaunched||state.paused)){
+   const restricted=member.radiationWatch?.active||!member.trusted;kind=restricted?'details':'recover';label=restricted?'Посмотреть причину':'Начать восстановление';badge=restricted?'Работы запрещены':'Нужен отдых';guidance=clearance.reasons.join('; ')+(member.radiationWatch?.active?' Суммарная доза: '+member.dose.toFixed(4)+' мкЗв.':'');
+  }
+  else if(!this.missionLaunched||state.paused){kind='start';label=state.elapsed?'Продолжить миссию':'Начать миссию';badge='Готов';guidance='Допуск получен. Проверку группы и выполнение заданий система проведёт сама.';}
+  else{kind='pause';label='Пауза';badge=clearance.allowed?'На миссии':'Работы приостановлены';guidance=state.message;}
+  this.primaryKind=kind;this.$('compact-primary').textContent=label;this.$('compact-primary').disabled=kind==='recovering';this.$('compact-health-status').textContent=badge;this.$('compact-health-status').classList.toggle('critical',!clearance.allowed&&!missing);this.$('compact-guidance').textContent=guidance;
+  this.$('compact-task').hidden=!state.elapsed&&!this.missionLaunched;this.$('compact-task-name').textContent=state.task||'Подготовка миссии';this.$('compact-task-state').textContent=state.message;this.$('compact-percent').textContent=Math.round(state.percent)+'%';this.$('compact-progress-fill').style.width=state.percent+'%';
+ }
+ primaryAction(){
+  if(!this.profile)return;
+  if(this.primaryKind==='exam'){this.$('compact-feedback').textContent=this.callbacks.examineCrew();this.refresh();}
+  else if(this.primaryKind==='start')this.launch();
+  else if(this.primaryKind==='pause')this.callbacks.pause();
+  else if(this.primaryKind==='recover')this.beginRecovery();
+  else if(this.primaryKind==='report')this.callbacks.report();
+  else if(this.primaryKind==='details'){this.$('compact-details').open=true;this.navigate(2);}
+ }
+ launch(){if(!this.profile)return;const result=this.callbacks.launch();this.$('launch-feedback').textContent=result.message;this.$('compact-feedback').textContent=result.started?'':result.message;if(result.started){this.missionLaunched=true;this.navigate(3);}}
  beginRecovery(){
   if(!this.profile||this.recoveryTimer)return;this.remaining=15;this.$('recover-rest').disabled=true;this.callbacks.message('УЧЕБНЫЙ ПРОТОКОЛ: отдых и стабилизация дыхания. 15 минут представлены 15 секундами симуляции.');
   this.$('recovery-feedback').textContent='Выполняется учебный протокол: 15 с (модель 15 мин). Показатели будут проверены повторно; доза не уменьшается.';
-  this.recoveryTimer=setInterval(()=>{this.remaining--;this.$('recovery-progress').value=15-this.remaining;this.$('recovery-feedback').textContent='Учебное восстановление: осталось '+this.remaining+' с.';if(this.remaining<=0){clearInterval(this.recoveryTimer);this.recoveryTimer=null;this.$('recover-rest').disabled=false;this.$('recovery-feedback').textContent=this.callbacks.recover(this.profile.id);this.refresh();}},1000);
+  this.recoveryTimer=setInterval(()=>{this.remaining--;this.$('recovery-progress').value=15-this.remaining;this.$('recovery-feedback').textContent='Учебное восстановление: осталось '+this.remaining+' с.';this.refresh();if(this.remaining<=0){clearInterval(this.recoveryTimer);this.recoveryTimer=null;this.$('recover-rest').disabled=false;this.$('recovery-feedback').textContent=this.callbacks.recover(this.profile.id);this.refresh();}},1000);
  }
  recheck(){if(!this.profile)return;this.$('recovery-feedback').textContent=this.callbacks.recheck(this.profile.id);this.refresh();}
  save(){if(this.profile)this.vault.save(this.profile.id,this.callbacks.snapshot());}
