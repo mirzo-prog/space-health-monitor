@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Space Health Monitor & IDS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+    :root {
+      --bg:        #0A0E1A;
+      --panel:     #0D1526;
+      --border:    #1A2A4A;
+      --accent:    #00D4FF;
+      --accent2:   #00FF9F;
+      --text:      #C8D8F0;
+      --dim:       #5A7090;
+      --red:       #FF3B3B;
+      --orange:    #FF8C00;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Звёздный фон ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at center, #0d1b3e 0%, #0A0E1A 100%);
+    }
+    #stars canvas { width: 100%; height: 100%; }
+
+    /* ── Контент ── */
+    .content { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem;
+    }
+
+    .hero-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      color: var(--accent);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      border: 1px solid var(--accent);
+      padding: .3rem 1rem;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      animation: pulse-border 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-border {
+      0%,100% { box-shadow: 0 0 6px var(--accent); }
+      50%      { box-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent)33; }
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 60%, #fff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 0 30px var(--accent)66);
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--dim);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 3rem;
+    }
+
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    .btn {
+      font-family: 'Orbitron', monospace;
+      font-size: .8rem;
+      letter-spacing: .1em;
+      padding: .75rem 2rem;
+      border-radius: 3px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .3s;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+    }
+    .btn-primary:hover { box-shadow: 0 0 25px var(--accent); transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+    }
+    .btn-secondary:href { box-shadow: 0 0 25px var(--accent2); }
+    .btn-secondary:hover { background: var(--accent2)11; transform: translateY(-2px); }
+
+    /* ── SCROLL INDICATOR ── */
+    .scroll-hint {
+      position: absolute; bottom: 2rem;
+      display: flex; flex-direction: column; align-items: center;
+      gap: .5rem; opacity: .5;
+      animation: bounce 2s ease-in-out infinite;
+      font-size: .7rem; letter-spacing: .2em; color: var(--dim);
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(8px); }
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .stat {
+      flex: 1; min-width: 150px;
+      text-align: center; padding: 1.5rem 1rem;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val {
+      font-family: 'Orbitron', monospace;
+      font-size: 2rem; font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.green { color: var(--accent2); }
+    .stat-val.orange { color: var(--orange); }
+    .stat-val.red { color: var(--red); }
+    .stat-label { font-size: .75rem; color: var(--dim); margin-top: .3rem; letter-spacing: .1em; }
+
+    /* ── SECTIONS ── */
+    section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
+
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem; letter-spacing: .3em;
+      color: var(--accent); text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .section-desc { color: var(--dim); max-width: 650px; line-height: 1.7; margin-bottom: 3rem; }
+
+    /* ── CARDS ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.75rem;
+      transition: all .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .card:hover { border-color: var(--accent)66; transform: translateY(-4px); box-shadow: 0 10px 40px var(--accent)11; }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: .9rem;
+      color: var(--accent);
+      margin-bottom: .75rem;
+      letter-spacing: .05em;
+    }
+    .card p { color: var(--dim); font-size: .9rem; line-height: 1.6; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-flow {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 1rem;
+      margin: 3rem 0;
+    }
+    .arch-node {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      min-width: 160px;
+      transition: all .3s;
+    }
+    .arch-node:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--accent)22; }
+    .arch-node .icon { font-size: 1.75rem; margin-bottom: .5rem; }
+    .arch-node .name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .8rem; color: var(--accent);
+      margin-bottom: .25rem;
+    }
+    .arch-node .desc { font-size: .7rem; color: var(--dim); }
+
+    .arch-arrow {
+      font-size: 1.5rem; color: var(--dim);
+      display: flex; flex-direction: column; align-items: center;
+      gap: .2rem;
+    }
+    .arch-arrow span { font-size: .6rem; color: var(--accent); font-family: 'Share Tech Mono'; white-space: nowrap; }
+
+    /* ── FILES TABLE ── */
+    .file-table { width: 100%; border-collapse: collapse; }
+    .file-table th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem; letter-spacing: .1em;
+      color: var(--dim); text-align: left;
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .file-table td {
+      padding: 1rem; border-bottom: 1px solid var(--border)66;
+      font-size: .9rem;
+    }
+    .file-table tr:hover td { background: var(--panel); }
+    .file-name {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent2);
+    }
+    .file-role {
+      display: inline-block;
+      padding: .2rem .6rem; border-radius: 3px;
+      font-size: .7rem; letter-spacing: .05em;
+    }
+    .role-red  { background: var(--red)22;    color: var(--red);    border: 1px solid var(--red)44;    }
+    .role-blue { background: var(--accent)22;  color: var(--accent);  border: 1px solid var(--accent)44;  }
+    .role-green{ background: var(--accent2)22; color: var(--accent2); border: 1px solid var(--accent2)44; }
+    .role-cfg  { background: var(--orange)22;  color: var(--orange);  border: 1px solid var(--orange)44;  }
+    .role-gui  { background: #9b59b622;         color: #c39bd3;        border: 1px solid #9b59b644;        }
+
+    /* ── IDS ── */
+    .ids-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media(max-width:640px) { .ids-grid { grid-template-columns: 1fr; } }
+
+    .ids-card {
+      background: var(--panel);
+      border: 1px solid;
+      border-radius: 6px; padding: 2rem;
+    }
+    .ids-mitm { border-color: var(--red)44; }
+    .ids-dos  { border-color: var(--orange)44; }
+
+    .ids-card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1rem; margin-bottom: 1rem;
+    }
+    .ids-mitm h3 { color: var(--red); }
+    .ids-dos  h3 { color: var(--orange); }
+    .ids-card p  { color: var(--dim); font-size: .9rem; line-height: 1.7; }
+    .ids-card code {
+      display: block; margin-top: 1rem;
+      background: #ffffff0a;
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: .75rem 1rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .8rem; color: var(--accent2);
+    }
+
+    /* ── TERMINAL LAUNCH ── */
+    .terminal {
+      background: #060910;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 760px; margin: 2rem auto;
+    }
+    .term-bar {
+      background: var(--panel);
+      padding: .6rem 1rem;
+      display: flex; align-items: center; gap: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: var(--red); }
+    .dot-y { background: var(--orange); }
+    .dot-g { background: var(--accent2); }
+    .term-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem; color: var(--dim);
+      margin-left: .5rem;
+    }
+    .term-body { padding: 1.5rem; }
+    .term-line {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .85rem; line-height: 2;
+    }
+    .prompt { color: var(--accent2); }
+    .cmd { color: var(--text); }
+    .comment { color: var(--dim); }
+
+    /* ── METRICS ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    @media(max-width:640px) { .metrics-grid { grid-template-columns: 1fr; } }
+
+    .metric-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 1.5rem;
+      text-align: center;
+    }
+    .metric-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem; color: var(--dim);
+      text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: .5rem;
+    }
+    .metric-range {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.3rem; font-weight: 700;
+      margin-bottom: .25rem;
+    }
+    .metric-unit { font-size: .7rem; color: var(--dim); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+      text-align: center; padding: 2rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem; color: var(--dim);
+      letter-spacing: .1em;
+    }
+
+    /* ── GLOW LINE ── */
+    .glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+      margin: 0;
+    }
+
+    /* ── LIVE DOT ── */
+    .live {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .7rem; color: var(--accent2);
+      font-family: 'Share Tech Mono', monospace;
+      margin-bottom: 1.5rem;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent2);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; box-shadow: 0 0 6px var(--accent2); }
+      50%      { opacity: .3; box-shadow: none; }
+    }
+
+    /* ── ASTRONAUT CARDS ── */
+    .crew-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+    @media(max-width:640px) { .crew-grid { grid-template-columns: 1fr; } }
+
+    .crew-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 1.5rem;
+      text-align: center;
+      transition: all .3s;
+    }
+    .crew-card:hover { border-color: var(--accent2)66; box-shadow: 0 0 20px var(--accent2)11; }
+    .crew-avatar { font-size: 3rem; margin-bottom: .75rem; }
+    .crew-id {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem; color: var(--accent);
+      letter-spacing: .2em; margin-bottom: .4rem;
+    }
+    .crew-name {
+      font-family: 'Orbitron', monospace;
+      font-size: .9rem; font-weight: 700;
+    }
+    .crew-status {
+      margin-top: .75rem;
+      display: inline-block; padding: .2rem .75rem;
+      border-radius: 20px; font-size: .7rem;
+      background: var(--accent2)22; color: var(--accent2);
+      border: 1px solid var(--accent2)44;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Stars BG -->
+<div id="stars">
+  <canvas id="starCanvas"></canvas>
+</div>
+
+<div class="content">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="live"><span class="live-dot"></span> СИСТЕМА АКТИВНА</div>
+    <div class="hero-badge">🛸 Space Station Alpha — Orbital Module 7</div>
+    <h1>Space Health<br>Monitor & IDS</h1>
+    <p class="hero-sub">
+      Мониторинг биометрии экипажа в реальном времени с встроенной системой
+      обнаружения кибератак (MITM & DoS) и ИИ-анализом на базе Ollama.
+    </p>
+    <div class="hero-buttons">
+      <a class="btn btn-primary" href="#launch">▶ Запуск проекта</a>
+      <a class="btn btn-secondary" href="#architecture">◈ Архитектура</a>
+    </div>
+    <div class="scroll-hint">
+      <span>SCROLL</span>
+      <span style="font-size:1.2rem">↓</span>
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-val">3</div>
+      <div class="stat-label">КОСМОНАВТА</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val green">6</div>
+      <div class="stat-label">МОДУЛЕЙ</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val orange">5%</div>
+      <div class="stat-label">ВЕРОЯТНОСТЬ АТАКИ</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val red">2</div>
+      <div class="stat-label">ТИПА АТАК (IDS)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">15с</div>
+      <div class="stat-label">ИИ-АНАЛИЗ</div>
+    </div>
+  </div>
+
+  <div class="glow-line"></div>
+
+  <!-- ── FEATURES ── -->
+  <section>
+    <p class="section-label">// Возможности</p>
+    <h2>Что делает система</h2>
+    <p class="section-desc">
+      Комплексное решение для мониторинга здоровья экипажа с защитой от
+      кибератак и встроенным ИИ-ассистентом.
+    </p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">❤️</div>
+        <h3>Биометрия в реальном времени</h3>
+        <p>Мониторинг пульса, насыщения кислородом (SpO₂) и уровня радиации для каждого члена экипажа. Графики обновляются непрерывно.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>IDS — Защита сети</h3>
+        <p>Обнаружение MITM-атак через HMAC-SHA256 и DoS-атак через rate limiting. Все инциденты логируются в файл.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h3>ИИ-ассистент (Ollama)</h3>
+        <p>Каждые 15 секунд модель llama3 анализирует последние 10 записей телеметрии и выдаёт медицинское заключение.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔴</div>
+        <h3>Red Team симуляция</h3>
+        <p>Генератор создаёт реалистичные биоданные и с 5% вероятностью инжектирует MITM- или DoS-атаку для тестирования IDS.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <h3>Sci-Fi GUI</h3>
+        <p>Полупрозрачное frameless окно в тёмных тонах, неоновые акценты, живые графики (pyqtgraph), мгновенные алерты.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Многопоточность</h3>
+        <p>Сервер IDS и ИИ-анализатор работают в QThread — интерфейс никогда не зависает, даже под нагрузкой.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── ARCHITECTURE ── -->
+  <section id="architecture">
+    <p class="section-label">// Архитектура</p>
+    <h2>Поток данных</h2>
+    <p class="section-desc">
+      Три независимых компонента объединены через TCP и очереди (queue.Queue).
+    </p>
+
+    <div class="arch-flow">
+      <div class="arch-node">
+        <div class="icon">🔴</div>
+        <div class="name">generator_red_team.py</div>
+        <div class="desc">Генерирует пакеты<br>+ инжектирует атаки</div>
+      </div>
+
+      <div class="arch-arrow">
+        <span>TCP :9999</span>
+        <span>JSON + HMAC ──▶</span>
+      </div>
+
+      <div class="arch-node">
+        <div class="icon">🛡️</div>
+        <div class="name">server_ids.py</div>
+        <div class="desc">IDS: HMAC-check<br>+ rate limiting</div>
+      </div>
+
+      <div class="arch-arrow">
+        <span>queue.Queue</span>
+        <span>валидные ──▶</span>
+      </div>
+
+      <div class="arch-node">
+        <div class="icon">🖥️</div>
+        <div class="name">gui_dashboard.py</div>
+        <div class="desc">PyQt5 dashboard<br>+ алерты IDS</div>
+      </div>
+
+      <div class="arch-arrow">
+        <span>queue.Queue</span>
+        <span>телеметрия ──▶</span>
+      </div>
+
+      <div class="arch-node">
+        <div class="icon">🤖</div>
+        <div class="name">ai_analyzer.py</div>
+        <div class="desc">Ollama llama3<br>→ callback в GUI</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── FILES ── -->
+  <section>
+    <p class="section-label">// Структура</p>
+    <h2>Файлы проекта</h2>
+    <p class="section-desc">Шесть модулей покрывают весь стек: конфиг, симуляция, безопасность, ИИ, интерфейс.</p>
+
+    <table class="file-table">
+      <thead>
+        <tr>
+          <th>Файл</th>
+          <th>Роль</th>
+          <th>Описание</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="file-name">config.py</td>
+          <td><span class="file-role role-cfg">⚙️ Config</span></td>
+          <td>Все константы: сеть, медпоказатели, цвета GUI, Ollama-настройки</td>
+        </tr>
+        <tr>
+          <td class="file-name">generator_red_team.py</td>
+          <td><span class="file-role role-red">🔴 Red Team</span></td>
+          <td>Генерирует биоданные + 5% вероятность MITM или DoS атаки</td>
+        </tr>
+        <tr>
+          <td class="file-name">server_ids.py</td>
+          <td><span class="file-role role-blue">🛡️ Blue Team</span></td>
+          <td>TCP-сервер + IDS: HMAC-SHA256 подпись и rate limiting</td>
+        </tr>
+        <tr>
+          <td class="file-name">ai_analyzer.py</td>
+          <td><span class="file-role role-green">🤖 AI</span></td>
+          <td>Ollama-обёртка: формирует промпт → llama3 → callback в GUI</td>
+        </tr>
+        <tr>
+          <td class="file-name">gui_dashboard.py</td>
+          <td><span class="file-role role-gui">🖥️ GUI</span></td>
+          <td>PyQt5 Sci-Fi дашборд: графики, алерты IDS, панель ИИ</td>
+        </tr>
+        <tr>
+          <td class="file-name">requirements.txt</td>
+          <td><span class="file-role role-cfg">📦 Deps</span></td>
+          <td>PyQt5, pyqtgraph, requests, numpy</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── IDS ── -->
+  <section>
+    <p class="section-label">// Безопасность</p>
+    <h2>Система обнаружения вторжений</h2>
+    <p class="section-desc">IDS детектирует два класса атак в реальном времени без остановки системы.</p>
+
+    <div class="ids-grid">
+      <div class="ids-card ids-mitm">
+        <h3>⚔️ MITM — Подмена пакетов</h3>
+        <p>
+          Каждый пакет подписан HMAC-SHA256. Если подпись не совпадает —
+          пакет отклоняется, инцидент логируется. Атакующий не может подделать
+          подпись без знания секретного ключа.
+        </p>
+        <code>HMAC_SECRET = b"space_station_alpha_secret_key_2024"</code>
+      </div>
+      <div class="ids-card ids-dos">
+        <h3>💥 DoS — Флуд пакетами</h3>
+        <p>
+          Скользящее окно в 1 секунду считает пакеты от каждого источника.
+          Превышение порога блокирует источник и фиксирует инцидент.
+          Защита работает в отдельном потоке.
+        </p>
+        <code>DOS_RATE_THRESHOLD = 10 пакетов/сек</code>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── CREW ── -->
+  <section>
+    <p class="section-label">// Экипаж</p>
+    <h2>Состав миссии</h2>
+    <p class="section-desc">Система мониторирует трёх космонавтов одновременно в отдельных виджетах.</p>
+
+    <div class="crew-grid">
+      <div class="crew-card">
+        <div class="crew-avatar">👨‍🚀</div>
+        <div class="crew-id">ASTRO-ID: 001</div>
+        <div class="crew-name">Ivanov A.</div>
+        <div class="crew-status">● ONLINE</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-avatar">👨‍🚀</div>
+        <div class="crew-id">ASTRO-ID: 002</div>
+        <div class="crew-name">Petrov B.</div>
+        <div class="crew-status">● ONLINE</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-avatar">👩‍🚀</div>
+        <div class="crew-id">ASTRO-ID: 003</div>
+        <div class="crew-name">Sidorova C.</div>
+        <div class="crew-status">● ONLINE</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── METRICS ── -->
+  <section>
+    <p class="section-label">// Показатели</p>
+    <h2>Нормальные диапазоны</h2>
+    <p class="section-desc">IDS автоматически выделяет отклонения от нормы на графиках.</p>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-name">❤️ Пульс</div>
+        <div class="metric-range" style="color:var(--accent)">50 – 100</div>
+        <div class="metric-unit">уд/мин · номинал: 72</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">🫁 SpO₂</div>
+        <div class="metric-range" style="color:var(--accent2)">94 – 100</div>
+        <div class="metric-unit">% · номинал: 98%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">☢️ Радиация</div>
+        <div class="metric-range" style="color:var(--orange)">0.1 – 5.0</div>
+        <div class="metric-unit">мкЗв/ч · номинал: 0.5</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- ── LAUNCH ── -->
+  <section id="launch">
+    <p class="section-label">// Запуск</p>
+    <h2>Как запустить</h2>
+    <p class="section-desc">Два терминала — и система работает. Ollama опционально.</p>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="term-title">bash — /home/mirzo/space-health-monitor</div>
+      </div>
+      <div class="term-body">
+        <div class="term-line"><span class="comment"># 1. Установить зависимости</span></div>
+        <div class="term-line"><span class="prompt">$ </span><span class="cmd">pip install -r requirements.txt</span></div>
+        <br>
+        <div class="term-line"><span class="comment"># 2. Терминал 1 — GUI + сервер IDS</span></div>
+        <div class="term-line"><span class="prompt">$ </span><span class="cmd">python gui_dashboard.py</span></div>
+        <br>
+        <div class="term-line"><span class="comment"># 3. Терминал 2 — Генератор (Red Team)</span></div>
+        <div class="term-line"><span class="prompt">$ </span><span class="cmd">python generator_red_team.py</span></div>
+        <br>
+        <div class="term-line"><span class="comment"># Ollama (опционально для ИИ-анализа)</span></div>
+        <div class="term-line"><span class="prompt">$ </span><span class="cmd">ollama pull llama3 && ollama serve</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div>SPACE HEALTH MONITOR & IDS · v1.0 · 2024</div>
+    <div style="margin-top:.5rem; color: #3A5070;">
+      PyQt5 · pyqtgraph · Ollama llama3 · HMAC-SHA256 · Python 3.10+
+    </div>
+  </footer>
+
+</div>
+
+<!-- ── STARS SCRIPT ── -->
+<script>
+  const canvas = document.getElementById('starCanvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    for (let i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        a: Math.random(),
+        speed: Math.random() * 0.005 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed * 60 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,220,255,${alpha})`;
+      ctx.fill();
+    });
+  }
+
+  let raf;
+  function animate(t) {
+    drawStars(t / 1000);
+    raf = requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', () => { resize(); initStars(); });
+  resize(); initStars(); animate(0);
+
+  // ── Плавный скролл ──
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))
+        ?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>

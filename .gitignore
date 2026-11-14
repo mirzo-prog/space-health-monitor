@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/
+.openai/
+web/.openai/
+*.zip
+*.tar.gz

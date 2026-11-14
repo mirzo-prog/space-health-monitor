@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Пройдите космическую симуляцию: следите за здоровьем экипажа и защищайте телеметрию."><title>ALPHA / Crew Medical Console</title><style>:root{color-scheme:dark;--bg:#0a1118;--panel:#0f1a23;--line:#2b3e4b;--text:#dbe7ed;--muted:#8fa6b4;--cyan:#61e2d3;--orange:#efba73;--red:#ff576c;--mono:'SFMono-Regular',Consolas,'Liberation Mono',monospace}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;background-image:linear-gradient(#7ba7bd05 1px,transparent 1px),linear-gradient(90deg,#7ba7bd05 1px,transparent 1px);background-size:32px 32px}header,footer{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:19px 4%;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:1px}header{background:#0b151ded;position:relative}.brand{color:var(--text);text-decoration:none;font-size:13px;letter-spacing:2px}.logo{font-size:23px;color:var(--cyan);margin-right:9px}.connection{color:var(--cyan)}i{display:inline-block;width:6px;height:6px;background:var(--cyan);margin-right:8px;box-shadow:0 0 9px #61e2d344}.muted,.range{color:var(--muted)}main{max-width:1560px;margin:auto;padding:0 4%}h1,h2,h3,p{overflow-wrap:anywhere}h1{font-size:clamp(33px,4vw,58px);line-height:1.15;font-weight:500;letter-spacing:-1.5px;margin:0 0 24px}h1 span{color:var(--cyan)}h2{font-weight:500;font-size:21px;line-height:1.4;margin:18px 0 10px}h3{font-size:16px;font-weight:500}button,input,select{font:inherit}button{cursor:pointer;border:1px solid transparent;border-radius:2px;background:var(--cyan);color:#09251f;padding:11px 16px;font-size:12px;font-weight:600;line-height:1.5;transition:background .15s}button:hover:not(:disabled){filter:brightness(1.12)}button:disabled{opacity:.38;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,canvas:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}.secondary{background:#162731;border-color:#39505f;color:var(--text)}input:not([type=checkbox]),select{background:#111f29;border:1px solid #3b5363;color:var(--text);padding:12px 14px;border-radius:2px;min-width:0}label,.eyebrow,.panel-title,.metric-label,.status-strip,.range,.scan-label,.scene-controls,.scene-hud,.crew-facts,.sample-time,.small,.stages{font-family:var(--mono)}label{font-size:10px;letter-spacing:1.3px;display:block;margin-bottom:9px}.eyebrow{font-size:10px;letter-spacing:1.7px;color:var(--cyan);margin:0 0 20px}.small{font-size:11px}.welcome{min-height:78vh;display:grid;grid-template-columns:1.2fr 1fr;gap:45px;align-items:center;padding:45px 0}.intro{font-size:16px;color:var(--muted);max-width:600px;line-height:1.8}.scenario-picker{margin:27px 0 22px}.scenario-picker select{width:100%;max-width:560px}.scenario-picker p{max-width:550px;margin:8px 0}.input-row{display:flex;gap:10px}.input-row input{flex:1}.features{display:flex;gap:25px;font-size:11px;color:var(--muted);margin-top:24px}.orbital{position:relative;height:440px;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(0deg,transparent 0 29px,#74b5c608 30px),repeating-linear-gradient(90deg,transparent 0 29px,#74b5c608 30px);border:1px solid #2b3e4b77}.planet{width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 28% 22%,#609598,#294e62 35%,#0c1c2b 70%);box-shadow:inset 10px 4px 25px #7fcace33}.orbit{position:absolute;width:370px;height:210px;border:1px solid #6cb1bc55;border-radius:50%;transform:rotate(-30deg)}.o2{width:350px;height:330px;transform:rotate(45deg);border-style:dashed}.satellite{position:absolute;top:54%;left:12%;color:var(--cyan);font-size:23px}.orbital-label{position:absolute;bottom:20px;right:20px;font:9px var(--mono);color:var(--muted);letter-spacing:1px}.orbital-label b{display:block;font-size:28px;font-weight:400;color:var(--text);margin:8px 0}.orbital-label span{font-size:8px}.mission-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:32px 0 24px}.mission-heading h1{font-size:30px;letter-spacing:-.5px;margin:0}.mission-heading .eyebrow{margin-bottom:10px}.mission-clock{display:flex;gap:11px;align-items:center;font-family:var(--mono);white-space:nowrap}.mission-clock>span{font-size:25px}.mission-clock small{color:var(--muted)}.status-strip{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 0;border-block:1px solid var(--line);font-size:10px;letter-spacing:.7px;color:var(--muted)}.status-strip b{color:var(--text);margin-left:8px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:21px;position:relative}.panel:before{content:'';position:absolute;left:-1px;top:-1px;width:14px;height:3px;background:#6c8998}.panel-title{display:flex;justify-content:space-between;gap:12px;font-size:10px;letter-spacing:1px;color:var(--muted);padding-bottom:15px;border-bottom:1px solid var(--line)}.panel-title span{color:var(--cyan);text-align:right}.assignment-panel,.scene-panel,.crew-selection,.live-mission{margin-top:22px}.task-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:19px 0}.task-card{display:flex;flex-direction:column;gap:7px;background:#101d27;border:1px solid var(--line);text-align:left;color:var(--text);padding:15px;font-weight:400;min-height:150px}.task-card small{font:9px var(--mono);color:var(--muted);letter-spacing:.5px}.task-card strong{font-weight:500;font-size:14px}.task-card span{color:var(--muted);font-size:11px;line-height:1.65}.task-card.active{border-color:var(--cyan);background:#61e2d308}.task-card.active small{color:var(--cyan)}.assignment-layout{display:grid;grid-template-columns:1.15fr 1fr;gap:35px;padding:5px 0 10px}.assignment-layout h2{margin-top:4px}.assignment-layout p{color:var(--muted);font-size:12px}.operation-controls{padding:6px 0}.auto-toggle{display:flex;align-items:center;gap:9px;font:11px Arial;letter-spacing:0;margin-bottom:14px}.auto-toggle input{accent-color:var(--cyan);width:16px;height:16px}.control-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.control-buttons button{font-size:11px;padding:10px}#operation-feedback{min-height:20px;color:var(--orange);font-size:11px}.mission-progress{height:4px;background:#263b49;margin:14px 0 10px}.mission-progress>div{height:100%;width:0;background:var(--cyan);transition:width .5s linear}details{border-top:1px solid var(--line);padding-top:13px;color:var(--muted);font-size:12px}summary{cursor:pointer;font-family:var(--mono);font-size:10px}details p{font-size:11px;line-height:1.8}.scene-container{position:relative;margin-top:16px;background:#070c11}.scene-container canvas{display:block;width:100%;height:430px;touch-action:none}#scene-fallback{padding:100px 30px;color:var(--orange);margin:0}.scene-hud{position:absolute;bottom:20px;left:20px;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-width:80%;background:#07131aca;padding:12px 16px;border-left:2px solid var(--cyan)}.scene-hud span{font-size:9px;color:var(--cyan);letter-spacing:1px}.scene-hud strong{font-size:14px;font-weight:400}.scene-hud small{color:var(--muted);font-size:10px}.scene-controls{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:10px;font-size:9px;color:var(--muted)}.scene-controls button{font-size:10px;padding:7px 12px;flex-shrink:0}.task-row{display:flex;gap:35px;align-items:center;margin:20px 0}.task-row p{font-size:11px;color:var(--muted);max-width:520px}.task-row select{font-size:13px;max-width:100%}.recommendation{padding:19px;background:#61e2d306;border:1px solid #3c6668}.recommendation h2{margin:6px 0;color:var(--cyan)}.recommendation p{font-size:12px;margin:0;color:var(--muted)}.recommendation .eyebrow{font-size:9px}.crew-table-wrap{overflow:auto}.crew-table{width:100%;border-collapse:collapse;min-width:1000px;font-size:11px;margin:21px 0}.crew-table caption{text-align:left;font:10px var(--mono);color:var(--muted);margin-bottom:12px}.crew-table th,.crew-table td{border-bottom:1px solid var(--line);padding:12px 9px;text-align:left}.crew-table th{font:9px var(--mono);color:var(--muted);line-height:1.7;font-weight:400}.crew-table td:not(:first-child){font-variant-numeric:tabular-nums}.crew-table td:nth-last-child(2){max-width:240px;font-size:10px}.crew-name-button{padding:4px 0;background:transparent;color:var(--text);border:0;font-size:12px;white-space:nowrap;text-align:left;font-weight:400}.table-role{display:block;font-size:9px;color:var(--muted)}.crew-best{background:#61e2d306}.crew-best .crew-name-button{color:var(--cyan)}.crew-selected{outline:1px solid #617c8c;outline-offset:-1px}.crew-excluded{background:#ff576c06}.bad-value{color:var(--red)!important}.warning-value,.stale-value{color:var(--orange)}.stale-value{text-decoration:underline dotted}.assessment-rules{margin-top:12px}.crew-selection>.small{margin-bottom:0}.astronaut-monitor{display:grid;grid-template-columns:300px 1fr;gap:45px;padding:20px 10px}.body-scan{background:repeating-linear-gradient(0deg,transparent 0 19px,#5d9ba407 20px),repeating-linear-gradient(90deg,transparent 0 19px,#5d9ba407 20px);border:1px solid var(--line);text-align:center}.body-scan svg{width:100%;height:315px;display:block}.scan-label{display:block;font-size:8px;letter-spacing:1px;color:var(--muted);padding-bottom:12px}.crew-overview{align-self:center}.crew-overview .eyebrow{margin-bottom:5px}.crew-overview h2{font-size:30px;margin:0 0 17px}.health-status{font:12px var(--mono);color:var(--cyan)}.health-status.critical{color:var(--red)}.health-status.uncertain{color:var(--orange)}.crew-overview>p:not(.eyebrow){font-size:13px;color:var(--muted);max-width:680px}.crew-facts{display:flex;gap:35px;margin-top:27px}.crew-facts span{font-size:9px;color:var(--muted);letter-spacing:.6px}.crew-facts strong{display:block;font-family:Arial;font-weight:400;color:var(--text);font-size:12px;letter-spacing:0;margin-top:7px;max-width:270px}.sample-time{font-size:9px!important;margin-top:24px}.medical-warning{padding:10px 14px;background:#ff576c10;color:var(--red);border-left:2px solid var(--red);font-size:11px}.stages{display:flex;justify-content:space-between;gap:12px;list-style:none;font-size:9px;color:var(--muted);padding:0;margin:12px 0 0}.stages .current{color:var(--cyan)}.stages .done{color:#b4c5cd}.diagnostics{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0}.diagnostics h2{font-size:18px}.diagnostics p{color:var(--muted);font-size:11px}.diagnostics blockquote{margin:20px 0;padding:14px 15px;border-left:2px solid #7793a1;background:#172732;font-size:13px;color:var(--text)}.recovery-values{display:flex;justify-content:space-between;gap:15px;font:9px var(--mono);color:var(--muted)}.recovery-values b{display:block;color:var(--text);font-size:20px;font-weight:400;margin-top:5px}progress{height:7px;width:100%;margin:12px 0;accent-color:var(--cyan)}.trend-history{display:flex;gap:4px;height:75px;align-items:end;margin-top:20px}.trend-history span{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to top,#61e2d31c var(--value),transparent var(--value));border-bottom:2px solid #61e2d3;height:100%;flex:1;font:8px var(--mono);color:var(--muted);padding-bottom:4px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:20px 0}.metric-label{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;letter-spacing:1px}.reading{font:48px var(--mono);margin:20px 0 0;line-height:1.2;color:var(--cyan)}.metric:nth-child(2) .reading{color:#93aaff}.metric:nth-child(3) .reading{color:var(--orange)}.range{font-size:9px}.metric canvas{width:100%;height:100px;display:block;margin-top:14px}.lower-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.lower-grid p{font-size:12px;color:var(--muted)}.auto-response{border-top:1px solid var(--line);margin-top:22px;padding-top:15px}.auto-response>span{font:9px var(--mono);letter-spacing:1px}#feedback{min-height:35px;color:var(--cyan)}.log{list-style:none;margin:0;padding:0;max-height:310px;overflow:auto}.log li{padding:12px 5px;border-bottom:1px solid var(--line);font-size:11px}.log time{display:block;color:var(--muted);font:9px var(--mono);margin-bottom:5px}.log .alert{color:var(--red);border-left:2px solid var(--red);padding-left:10px;background:#ff576c06}.disclaimer{font-size:10px;color:var(--muted);margin:22px 0 35px}.danger{border-color:var(--red)!important}.danger:before{background:var(--red)}.danger .reading,.danger .range{color:var(--red)!important}.medical-alert{border-color:var(--red)}.medical-alert .body-heart{stroke:var(--red)}.sensor-alert{fill:var(--red);animation:alarm 1s infinite}.body-heart{animation:alarm 1.5s infinite}.result{margin:40px auto;max-width:1100px;padding:35px}.result h1{font-size:32px}.result>p{color:var(--muted);font-size:13px}.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;border-block:1px solid var(--line);padding:24px 0;margin:25px 0}.result-stats b{display:block;font:42px var(--mono);color:var(--cyan);font-weight:400}.result-stats span{font:9px var(--mono);color:var(--muted)}.result-buttons{display:flex;gap:10px;margin-top:25px}.report-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.report-member{padding:15px;border:1px solid var(--line);background:#11202a}.report-member h3{margin:0 0 9px;color:var(--cyan)}.report-member p{font-size:11px;color:var(--muted)}.report-timeline{list-style:none;padding:0;max-height:450px;overflow:auto}.report-timeline li{display:grid;grid-template-columns:55px 1fr;gap:12px;font-size:11px;border-bottom:1px solid var(--line);padding:12px 0}.report-timeline time{font:10px var(--mono);color:var(--cyan)}footer{border-top:1px solid var(--line);border-bottom:0;margin-top:20px;color:var(--muted);font-size:9px}[hidden]{display:none!important}@keyframes alarm{50%{opacity:.5}}@media(max-width:1100px){.task-cards{grid-template-columns:repeat(2,1fr)}.assignment-layout{grid-template-columns:1fr 1fr;gap:20px}.brand .muted{display:none}.crew-facts{gap:20px}}@media(max-width:850px){.welcome{grid-template-columns:1fr;padding:45px 0;min-height:80vh}.orbital{display:none}.mission-heading{flex-direction:column;align-items:flex-start}.diagnostics,.lower-grid{grid-template-columns:1fr}.astronaut-monitor{grid-template-columns:230px 1fr;gap:20px;padding-inline:0}.body-scan svg{height:270px}.crew-overview h2{font-size:24px}.health-status{font-size:10px}.crew-facts{flex-direction:column;gap:12px}.assignment-layout{grid-template-columns:1fr}.scene-container canvas{height:360px}.panel{padding:17px}.task-row{align-items:flex-start;gap:20px}.metric-label{font-size:9px}.metric-label span{display:none}.reading{font-size:39px}}@media(max-width:560px){main{padding:0 4%}header,footer{padding:16px 4%;gap:8px}.brand{font-size:10px;letter-spacing:1px}.connection{font-size:8px;letter-spacing:0}.logo{font-size:19px;margin-right:3px}.mission-heading h1{font-size:25px}.mission-heading .eyebrow{font-size:8px}.mission-clock{gap:8px}.mission-clock button{font-size:10px;padding:8px 10px}.mission-clock>span{font-size:22px}.status-strip{font-size:8px;gap:8px}.status-strip>span:last-child{display:none}.panel-title{font-size:8px;letter-spacing:.5px}.input-row{flex-direction:column}.features{gap:14px;font-size:10px}.task-cards{gap:7px}.task-card{padding:11px;min-height:150px}.task-card strong{font-size:12px}.task-card span{font-size:10px}.task-card small{font-size:8px}.task-row{flex-direction:column;gap:10px}.task-row select{width:100%}.task-row>div{width:100%}.astronaut-monitor{grid-template-columns:1fr}.body-scan{max-width:250px;margin:auto;width:100%}.body-scan svg{height:285px}.crew-overview{padding:5px}.crew-facts{flex-direction:row;gap:15px}.crew-facts strong{font-size:11px}.stages{font-size:7px;gap:5px}.metrics{grid-template-columns:1fr;gap:12px}.metric{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}.metric .metric-label,.metric .reading,.metric .range{grid-column:1}.metric canvas{grid-column:2;grid-row:1/4;margin:0}.metric .reading{font-size:38px;margin:8px 0}.range{font-size:8px}.scene-container canvas{height:310px}.scene-hud{left:10px;bottom:10px;padding:9px 11px}.scene-hud strong{font-size:11px}.scene-hud span{font-size:8px}.scene-controls{font-size:8px;gap:10px;align-items:flex-start}.scene-controls button{padding:6px 9px;font-size:9px}.result{padding:23px 17px;margin:25px 0}.result h1{font-size:26px}.report-grid{grid-template-columns:1fr}.result-stats{gap:10px}.result-stats b{font-size:34px}.result-stats span{font-size:8px}.result-buttons{flex-direction:column}.recovery-values{font-size:8px}.recovery-values b{font-size:18px}footer>span:last-child{display:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+.daily-medical,.daily-planning{margin-top:22px}.daily-gate{padding:12px 15px;background:#61e2d30a;border-left:2px solid var(--cyan);font-size:12px}.daily-gate.blocked{color:var(--orange);background:#efba7308;border-color:var(--orange)}.daily-toolbar{display:flex;gap:20px;flex-wrap:wrap;margin:24px 0}.daily-toolbar select,.daily-toolbar input{font-size:12px}.daily-layout{display:grid;grid-template-columns:1fr 1.25fr;gap:28px;margin:20px 0}.daily-layout>form{border:1px solid var(--line);padding:18px;height:fit-content}.exam-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.exam-fields input{display:block;width:100%;margin-top:7px}.exam-fields label{font-size:9px;letter-spacing:.4px;margin:0}textarea{display:block;background:#111f29;border:1px solid #3b5363;color:var(--text);font:13px Arial;resize:vertical;width:100%;padding:12px;margin-bottom:14px}.daily-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.daily-chart-grid>div{padding:10px;background:#0b151d;border:1px solid var(--line);min-width:0}.daily-chart-grid h3{margin:0 0 8px;font:10px var(--mono);color:var(--muted)}.daily-chart-grid canvas{display:block;width:100%;height:150px}.daily-layout h2{font-size:17px;margin-top:0}#daily-comparison{font-size:11px;color:var(--muted)}.daily-delta{display:inline-block;padding:5px 8px;margin:3px;border:1px solid var(--line);font:10px var(--mono)}.daily-history{min-width:700px}.archive-controls,.plan-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}.archive-import{font:11px Arial;letter-spacing:0;margin:0;padding:10px;border:1px solid var(--line)}.archive-import input{display:block;font-size:10px;margin-top:6px}.daily-plan-requests{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.daily-request{padding:12px;border:1px solid var(--line)}.daily-request input{width:70px;padding:7px!important;margin-left:10px}.daily-request select{display:block;width:100%;font-size:11px;padding:8px;margin-top:8px}.daily-plan-row{border:1px solid var(--line);padding:16px;margin-top:12px}.daily-plan-row h3{margin:0 0 10px}.daily-plan-row p{font-size:12px}.daily-plan-row button{margin-top:12px;font-size:11px}.radiation-watch{font:10px var(--mono);padding:12px;border:1px solid var(--line);margin:14px 0;color:var(--muted)}.radiation-watch.danger{color:var(--red);background:#ff576c08}@media(max-width:1100px){.daily-layout{grid-template-columns:1fr}.daily-plan-requests{grid-template-columns:1fr 1fr}.daily-chart-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.daily-chart-grid{grid-template-columns:1fr 1fr}.daily-toolbar{flex-direction:column;gap:12px}.daily-toolbar input,.daily-toolbar select{width:100%}.daily-plan-requests{grid-template-columns:1fr 1fr;gap:7px}.daily-request{padding:9px}.daily-request input{width:55px}.daily-layout>form{padding:13px}.exam-fields{gap:10px}}@media(max-width:380px){.daily-chart-grid{grid-template-columns:1fr}.daily-plan-requests{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><a class="brand" href="./"><span class="logo">✦</span> ALPHA / MED <span class="muted">/ CREW OPERATIONS</span></a><span class="connection"><i></i> DEMO / TELEMETRY READY</span></header>
+<main>
+<section id="welcome" class="welcome">
+<div><p class="eyebrow">ОРБИТАЛЬНАЯ СТАНЦИЯ / АЛЬФА</p><h1>Экипаж на миссии.<br><span>Медицинский контроль.</span></h1><p class="intro">Сравните медицинскую телеметрию экипажа. Система предложит космонавта для выбранного задания и объяснит рекомендацию. Во время миссии показатели и рейтинг обновляются автоматически.</p><div class="scenario-picker"><label for="scenario">СЦЕНАРИЙ МИССИИ</label><select id="scenario"><option value="station">Ремонт орбитальной станции</option><option value="surface">Исследование поверхности</option><option value="emergency">Аварийное возвращение</option></select><p id="scenario-description" class="small muted">Работа на орбите: гипоксия, подмена пакетов, радиация и перегрузка канала.</p></div><form id="entry"><label for="name">ИМЯ ПЕРВОГО УЧАСТНИКА ЭКИПАЖА</label><div class="input-row"><input id="name" name="name" placeholder="Введите ваше имя" required maxlength="40" autocomplete="given-name"><button type="submit">Сформировать экипаж ↗</button></div><p class="muted small">90 секунд миссии · Четыре участника · Телеметрия 1 Гц</p></form><div class="features"><span>♡ Биометрия</span><span>◈ Защита телеметрии</span><span>↗ Ваш результат</span></div></div>
+<div class="orbital" aria-hidden="true"><div class="orbit o1"></div><div class="orbit o2"></div><div class="planet"></div><div class="satellite">✦</div><div class="orbital-label">АЛЬФА / LOW EARTH ORBIT<br><b>408 км</b><span>ВЫСОТА ОРБИТЫ</span></div></div>
+</section>
+<section id="dashboard" hidden>
+<div class="mission-heading"><div><p class="eyebrow">МЕДИЦИНСКИЙ ПОСТ / МОНИТОРИНГ ЭКИПАЖА</p><h1>Экипаж: <span id="pilot"></span></h1></div><div class="mission-clock"><span id="clock">00:00</span><small> / 01:30</small><button id="pause" class="secondary">Пауза</button><button id="finish" class="secondary">Завершить</button></div></div>
+<div class="status-strip"><span><i></i> ТЕЛЕМЕТРИЯ АКТИВНА</span><span>ВЫПОЛНЕНО <b id="score">0%</b></span><span>ЗАДАНИЙ ВЫПОЛНЕНО <b id="resolved">0</b></span><span>ЭКИПАЖ / 04</span></div>
+<section class="panel daily-medical"><div class="panel-title">00 / ОБЯЗАТЕЛЬНЫЙ ЕЖЕДНЕВНЫЙ МЕДОСМОТР <span id="daily-coverage"></span></div><p id="daily-gate" class="daily-gate" role="status"></p><p id="storage-warning" class="bad-value small" role="status"></p><div class="daily-toolbar"><div><label for="medical-day">ДАТА ОСМОТРА / ПЛАНА</label><input id="medical-day" type="date" required></div><div><label for="medical-member">КОСМОНАВТ</label><select id="medical-member"></select></div><div><label for="history-range">ДИАГРАММЫ</label><select id="history-range"><option value="7">Последние 7 осмотров</option><option value="30">Последние 30 осмотров</option><option value="all">Вся история</option></select></div></div><div class="daily-layout"><form id="daily-exam-form"><div class="panel-title">ОСМОТР / ОДНА ЗАПИСЬ В ДЕНЬ <span id="exam-status"></span></div><div class="exam-fields"><label>ПУЛЬС · уд/мин<input id="exam-hr" type="number" min="20" max="220" step="0.1" required></label><label>SpO₂ · %<input id="exam-oxygen" type="number" min="50" max="100" step="0.1" required></label><label>ФОН · мкЗв/ч<input id="exam-radiation" type="number" min="0" max="100" step="0.001" required></label><label>УСТАЛОСТЬ · %<input id="exam-fatigue" type="number" min="0" max="100" step="0.1" required></label><label>СУММАРНАЯ ДОЗА · мкЗв<input id="exam-dose" type="number" min="0" max="10000" step="0.000001" required></label></div><label for="exam-notes">ЖАЛОБЫ / ЗАМЕТКИ</label><textarea id="exam-notes" maxlength="500" rows="2" placeholder="Самочувствие и замечания по осмотру"></textarea><label class="auto-toggle"><input type="checkbox" id="exam-severe"> Есть выраженная жалоба</label><label class="auto-toggle"><input type="checkbox" id="exam-trusted" checked> Измерения достоверны</label><div class="control-buttons"><button id="capture-exam" type="button" class="secondary">Снять данные симуляции</button><button id="save-exam" type="submit">Записать медосмотр</button></div><p id="exam-feedback" role="status" class="small"></p><p class="small muted">Одна неизменяемая запись на участника за календарный день. Снимок симуляции помечается отдельно от ручного ввода. Архивные осмотры не заменяют сегодняшний.</p></form><div><h2 id="daily-comparison-title">Сравнение с предыдущим осмотром</h2><div id="daily-comparison"></div><div class="daily-chart-grid"><div><h3>Пульс · уд/мин</h3><canvas id="daily-hr-chart" role="img" aria-label="Пульс по дням"></canvas></div><div><h3>SpO₂ · %</h3><canvas id="daily-oxygen-chart" role="img" aria-label="Кислород по дням"></canvas></div><div><h3>Фон · мкЗв/ч</h3><canvas id="daily-radiation-chart" role="img" aria-label="Радиационный фон по дням"></canvas></div><div><h3>Усталость · %</h3><canvas id="daily-fatigue-chart" role="img" aria-label="Усталость по дням"></canvas></div><div><h3>Накопленная доза · мкЗв</h3><canvas id="daily-dose-chart" role="img" aria-label="Накопленная доза по дням"></canvas></div></div><p id="history-empty" class="small muted"></p></div></div><details><summary>Таблица ежедневных результатов</summary><div class="crew-table-wrap"><table class="crew-table daily-history"><thead><tr><th>Дата</th><th>Пульс</th><th>SpO₂</th><th>Фон</th><th>Усталость</th><th>Доза</th><th>Источник / достоверность</th></tr></thead><tbody id="daily-history-body"></tbody></table></div></details><div class="archive-controls"><button id="export-medical" class="secondary">Скачать архив осмотров</button><label class="archive-import">Загрузить архив<input id="import-medical" type="file" accept="application/json,.json"></label></div></section>
+<section class="panel daily-planning"><div class="panel-title">ПЛАН / РАСПРЕДЕЛЕНИЕ ЗАДАНИЙ НА ДЕНЬ <span id="plan-date"></span></div><p class="small muted">План строится по осмотрам выбранного дня. На каждом часу — одна группа и резерв. Следующие назначения учитывают рост учебной усталости; при отсутствии подходящих участников задание откладывается.</p><div id="daily-plan-requests" class="daily-plan-requests"></div><div class="plan-buttons"><button id="generate-day-plan">Распределить задания по осмотрам</button><button id="save-day-plan" class="secondary">Сохранить план дня</button></div><p id="plan-feedback" role="status"></p><div id="daily-plan-results"></div></section>
+<section class="panel assignment-panel"><div class="panel-title">01 / ПЛАНИРОВАНИЕ И ВЫПОЛНЕНИЕ <span id="scenario-name"></span></div><div id="task-cards" class="task-cards"></div><div class="assignment-layout"><div><h2 id="assignment-title">Задание не назначено</h2><p id="assignment-detail"></p><div class="mission-progress"><div id="assignment-fill"></div></div><p id="team-plan" class="small"></p></div><div class="operation-controls"><label class="auto-toggle"><input type="checkbox" id="autopilot" checked> Автоматическое назначение и резерв</label><div class="control-buttons"><button id="preflight">Проверить готовность</button><button id="assign">Назначить группу</button><button id="replace" class="secondary">Заменить участника</button><button id="cancel-task" class="secondary">Отменить задание</button></div><p id="operation-feedback" role="status"></p></div></div><details id="preflight-details"><summary>Результаты пробы нагрузки · до / после</summary><div id="preflight-results"></div></details></section>
+<section class="panel scene-panel"><div class="panel-title">3D / ВЫПОЛНЕНИЕ ЗАДАНИЯ <span>INTERACTIVE VIEW</span></div><div class="scene-container"><canvas id="mission-3d" aria-label="Интерактивная трёхмерная сцена выполнения задания космонавтами" tabindex="0"></canvas><p id="scene-fallback" hidden>3D недоступно: браузер не предоставил WebGL. Телеметрия, задания и подбор экипажа продолжают работать.</p><div class="scene-hud"><span id="scene-task-label">ЭКИПАЖ / АЛЬФА</span><strong id="scene-status-label">Подготовка задания</strong><small id="scene-progress-label">0%</small><small id="scene-crew-label"></small></div></div><div class="scene-controls"><span>Мышь / касание — вращение · колесо — масштаб · стрелки / + / − — камера</span><button id="reset-camera" class="secondary">Сброс камеры</button></div></section>
+<section class="panel crew-selection" aria-label="Сравнение экипажа"><div class="panel-title">02 / СРАВНЕНИЕ ЭКИПАЖА <span>4 КОСМОНАВТА</span></div><div class="task-row"><div><label for="task">ЗАДАНИЕ</label><select id="task"><option value="eva">Выход в открытый космос</option><option value="repair">Ремонт оборудования</option><option value="research">Научный эксперимент</option><option value="evacuation">Аварийное возвращение</option></select></div><div><span class="muted small">Приоритеты оценки</span><p id="task-weights"></p></div></div><div class="recommendation" id="recommendation" role="status" aria-live="polite"><span class="eyebrow">РЕКОМЕНДАЦИЯ МОДЕЛИ</span><h2 id="recommended-name"></h2><p id="recommendation-reason"></p></div><div class="crew-table-wrap"><table class="crew-table"><caption>Сравнение показателей экипажа · нажмите имя для подробного мониторинга</caption><thead><tr><th scope="col">Космонавт</th><th scope="col">Пульс<br>уд/мин</th><th scope="col">SpO₂<br>%</th><th scope="col">Радиация<br>мкЗв/ч</th><th scope="col">Усталость</th><th scope="col">Доза<br>мкЗв</th><th scope="col">Риск</th><th scope="col">Данные / состояние</th><th scope="col">Оценка</th></tr></thead><tbody id="crew-table-body"></tbody></table></div><details class="assessment-rules"><summary>Требования задания и формула подбора</summary><p id="task-requirements"></p><p>Итоговая оценка: 70% — текущая биометрия, 15% — запас сил, 10% — стабильность последних 10 замеров, 5% — остаток учебного бюджета дозы. Внутри биометрии действуют веса выбранного задания. Пульс: 100 − 2 × |пульс − 70|; кислород: (SpO₂ − 94) / 6 × 100; радиация: (5 − фон) / 4.9 × 100. Компоненты ограничены 0–100. Без истории стабильность = 50. При равенстве — порядок ID.</p><p>Сильная жалоба, высокая усталость, превышение дозы, высокий индекс риска или недостоверные измерения исключают участника. Группа подбирается по рейтингу; минимум один подходящий участник остаётся в резерве. Это демонстрационные правила.</p></details><p class="small muted">Все профили и правила синтетические. Рекомендация предназначена для демонстрации; решение о реальном допуске принимает медицинская служба.</p></section>
+<article class="panel live-mission" id="live-mission"><div class="panel-title"><span class="live-dot">03 / LIVE · СОСТОЯНИЕ КОСМОНАВТА</span><span id="phase">Предполётный контроль</span></div>
+<div class="astronaut-monitor"><div class="body-scan" id="body-scan"><svg viewBox="0 0 300 350" role="img" aria-label="Техническая схема космонавта в скафандре нового образца"><defs><linearGradient id="suit" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e2e9e9"/><stop offset=".5" stop-color="#879fa8"/><stop offset="1" stop-color="#475b68"/></linearGradient><linearGradient id="visor"><stop stop-color="#234658"/><stop offset=".6" stop-color="#0a202d"/><stop offset="1" stop-color="#39798a"/></linearGradient></defs><g fill="none" stroke="#31505f" stroke-width="1"><path d="M15 40h55M230 40h55M15 310h55M230 310h55M150 8v330" stroke-dasharray="3 5"/><circle cx="150" cy="82" r="65" stroke-dasharray="2 6"/><path d="M40 145h220M40 240h220" stroke-dasharray="2 5"/></g><g fill="#354d5a" stroke="#7b9aa5" stroke-width="2"><rect x="103" y="120" width="94" height="113" rx="12"/><rect x="85" y="135" width="130" height="57" rx="16"/></g><g fill="url(#suit)" stroke="#b5c6ca" stroke-width="1.5"><path d="M112 127L96 142l-13 77-22-2 5-70q4-21 27-26l16-4z"/><path d="M188 127l16 15 13 77 22-2-5-70q-4-21-27-26l-16-4z"/><path d="M109 126h82l13 37-10 71h-88l-10-71z"/><path d="M106 229h39l-6 78h-35zM155 229h39l2 78h-35z"/><rect x="98" y="302" width="44" height="24" rx="6"/><rect x="158" y="302" width="44" height="24" rx="6"/><ellipse cx="150" cy="78" rx="49" ry="53"/><rect x="59" y="210" width="25" height="28" rx="9"/><rect x="216" y="210" width="25" height="28" rx="9"/></g><path d="M111 61q39-30 78 0v33q-39 25-78 0z" fill="url(#visor)" stroke="#76c9d3" stroke-width="2"/><path d="M119 65q30-19 60-2" fill="none" stroke="#79a5b3" stroke-width="2"/><g fill="#243c49" stroke="#91aeb9"><rect x="119" y="151" width="62" height="48" rx="4"/><path d="M104 213h92v12h-92zM103 268h36v9h-36zM161 268h36v9h-36zM69 180h20v8H69zM211 180h20v8h-20z"/></g><path class="body-heart" d="M125 174h9l5-9 8 22 8-15h20" fill="none" stroke="#61e2d3" stroke-width="2"/><path d="M180 192q45 9 28 45l-13 4" fill="none" stroke="#c0aa75" stroke-width="6"/><circle class="sensor" id="chest-sensor" cx="185" cy="143" r="5" fill="#61e2d3"/><circle class="sensor" id="oxygen-sensor" cx="71" cy="225" r="5" fill="#9aaeff"/><circle class="sensor" id="radiation-sensor" cx="211" cy="134" r="5" fill="#ffbe7b"/><g fill="none" stroke="#61e2d3" stroke-width="1"><path d="M185 143h47l14-14h38M71 225H38l-15 15H8M211 134l23-35h50"/></g><g fill="#8faebc" font-size="9" font-family="monospace"><text x="247" y="124">HR</text><text x="8" y="254">SpO₂</text><text x="248" y="94">RAD</text><text x="10" y="23">SUIT / MK-IV</text><text x="215" y="338">ALPHA-01</text></g></svg><span class="scan-label">БИОМЕТРИЧЕСКИЕ ДАТЧИКИ / 03</span></div>
+<div class="crew-overview"><p class="eyebrow">ПОДРОБНЫЙ МОНИТОРИНГ УЧАСТНИКА</p><h2 id="crew-name"></h2><div id="health-status" class="health-status" role="status" aria-live="polite">● СОСТОЯНИЕ СТАБИЛЬНО</div><p id="health-detail">Все показатели в пределах нормы.</p><div class="crew-facts"><span>ДЕЯТЕЛЬНОСТЬ<strong id="activity">Проверка скафандра</strong></span><span>БИОДАТЧИКИ<strong id="sensor-status">Сигнал поступает</strong></span></div><p class="sample-time" id="sample-time">Данные обновляются каждую секунду</p></div></div>
+<div class="warning-overlay medical-warning" id="flight-warning" hidden>⚠ ОБНАРУЖЕНА ПРОБЛЕМА</div><div class="mission-progress"><div id="progress-fill"></div></div><ol class="stages"><li>Подготовка</li><li>Старт</li><li>Адаптация</li><li>Работа на орбите</li><li>Возвращение</li></ol></article>
+<section class="diagnostics"><article class="panel"><div class="panel-title">04 / ТЕНДЕНЦИИ И ПРОГНОЗ <span id="risk-label"></span></div><h2 id="trend-title"></h2><p id="forecast"></p><p id="risk-explanation"></p><div id="trend-history" class="trend-history" aria-label="Последние измерения кислорода"></div></article><article class="panel"><div class="panel-title">05 / СВЯЗЬ И ВОССТАНОВЛЕНИЕ <span id="member-duty"></span></div><blockquote id="complaint"></blockquote><div class="recovery-values"><span>УСТАЛОСТЬ <b id="fatigue-value"></b></span><span>НАКОПЛЕННАЯ ДОЗА <b id="dose-value"></b></span></div><progress id="fatigue-bar" max="100" value="0" aria-label="Усталость космонавта"></progress><p id="dose-note"></p><div id="radiation-watch" class="radiation-watch" role="status"></div><button id="rest-member" class="secondary">Перевести на отдых</button><p id="rest-feedback" role="status"></p></article></section><div class="metrics">
+<article class="panel metric"><div class="metric-label">♡ ПУЛЬС <span>уд/мин</span></div><div class="reading" id="hr">72</div><span class="range">Норма: 50–100</span><canvas id="hr-chart" role="img" aria-label="График пульса"></canvas></article>
+<article class="panel metric"><div class="metric-label">◉ КИСЛОРОД <span>SpO₂ / %</span></div><div class="reading" id="spo2">98</div><span class="range">Норма: 94–100</span><canvas id="spo2-chart" role="img" aria-label="График кислорода"></canvas></article>
+<article class="panel metric"><div class="metric-label">☀ РАДИАЦИЯ <span>мкЗв/ч</span></div><div class="reading" id="rad">0.50</div><span class="range">Норма: 0.1–5.0</span><canvas id="rad-chart" role="img" aria-label="График радиации"></canvas></article>
+</div>
+<div class="lower-grid"><article class="panel" id="event-panel"><div class="panel-title">06 / МЕДИЦИНСКИЕ И СЕТЕВЫЕ СОБЫТИЯ <span id="event-badge">ШТАТНО</span></div><h2 id="event-title">Системы работают штатно</h2><p id="event-detail">Наблюдение за состоянием космонавта и целостностью его телеметрии.</p><div class="auto-response"><span class="muted">АВТОМАТИЧЕСКАЯ ЗАЩИТА</span><p id="feedback" role="status" aria-live="polite">Все системы под контролем.</p></div></article>
+<article class="panel"><div class="panel-title">07 / ЖУРНАЛ МИССИИ <span>LIVE</span></div><ol id="log" class="log" aria-label="Журнал событий"></ol></article></div>
+<p class="disclaimer">Учебная симуляция. Показатели сгенерированы в браузере. Показатели, жалобы, прогноз и критерии подбора искусственные. Это не медицинская диагностика. Сетевые события и неисправности датчиков имитируются.</p>
+</section>
+<section id="result" class="result panel" hidden><p class="eyebrow">МИССИЯ ЗАВЕРШЕНА</p><h1>Миссия окончена, <span id="result-name"></span>.</h1><p>Отчёт мониторинга и подбора экипажа</p><div class="result-stats"><div><b id="result-score"></b><span>ЗАДАНИЙ ВЫПОЛНЕНО</span></div><div><b id="result-resolved"></b><span>ЗАМЕН ЭКИПАЖА</span></div><div><b id="result-mistakes"></b><span>СЕКУНД НАБЛЮДЕНИЯ</span></div></div><p id="result-note"></p><p id="medical-summary"></p><p id="selection-summary"></p><div class="report-grid" id="report-crew"></div><h2>Разбор миссии</h2><ol id="report-timeline" class="report-timeline"></ol><button id="back-monitor" class="secondary">Вернуться к сравнению экипажа</button><div class="result-buttons"><button id="restart">Пройти ещё раз ↗</button><button id="download" class="secondary">Скачать отчёт</button></div></section>
+</main><footer><span>SPACE HEALTH MONITOR <span class="muted">/ TRAINING SYSTEM</span></span><span>Здоровье экипажа. Безопасность данных.</span></footer><script>
+// Local calendar-day records for this educational simulator. No invented history.
+function localDay(date=new Date()){
+ return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function validDay(day){if(typeof day!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(day))return false;const [y,m,d]=day.split('-').map(Number),date=new Date(y,m-1,d,12);return date.getFullYear()===y&&date.getMonth()===m-1&&date.getDate()===d;}
+function validateExam(record){
+ if(!record||typeof record.memberId!=='string'||typeof record.name!=='string'||!record.name.trim()||!validDay(record.day))throw Error('Некорректная дата или участник осмотра.');
+ const ranges={heart_rate:[20,220],spO2:[50,100],radiation_level:[0,100],fatigue:[0,100],dose:[0,10000]};
+ for(const [key,[min,max]]of Object.entries(ranges)){const value=key in (record.values||{})?record.values[key]:record[key];if(!Number.isFinite(value)||value<min||value>max)throw Error(`Проверьте поле ${key}: допустимо ${min}–${max}.`);}
+ if(typeof record.trusted!=='boolean'||!['manual','simulation'].includes(record.source))throw Error('Укажите источник и достоверность измерений.');
+ if(!Array.isArray(record.symptoms)||record.symptoms.some(s=>!s||typeof s.text!=='string'||typeof s.severe!=='boolean'))throw Error('Некорректные жалобы.');
+ return record;
+}
+function validateDailyPlan(plan){
+ const taskSizes={eva:2,repair:1,research:1,evacuation:2};
+ if(!plan||!validDay(plan.day)||!Array.isArray(plan.rows)||plan.rows.length>24)throw Error('Некорректный дневной план.');
+ const hours=new Set();
+ for(const row of plan.rows){
+  if(!row||!Object.hasOwn(taskSizes,row.taskId)||!Number.isInteger(row.hour)||row.hour<0||row.hour>23||hours.has(row.hour)||!['planned','blocked'].includes(row.status)||!Array.isArray(row.ids)||typeof row.reason!=='string'||!Array.isArray(row.comparison))throw Error('Некорректная строка дневного плана.');
+  hours.add(row.hour);
+  if(row.status==='planned'&&(row.ids.length!==taskSizes[row.taskId]||row.ids.some(id=>typeof id!=='string')||typeof row.reserveId!=='string'||new Set([...row.ids,row.reserveId]).size!==row.ids.length+1))throw Error('Некорректная группа или резерв дневного плана.');
+  for(const c of row.comparison)if(typeof c.id!=='string'||typeof c.name!=='string'||typeof c.eligible!=='boolean'||!Number.isFinite(c.score)||!Array.isArray(c.reasons)||c.reasons.some(r=>typeof r!=='string'))throw Error('Некорректное сравнение экипажа в плане.');
+ }
+ return plan;
+}
+function validateExposureLedger(ledger){
+ if(!ledger||typeof ledger!=='object'||Array.isArray(ledger))throw Error('Некорректный журнал радиационной дозы.');
+ for(const [id,e]of Object.entries(ledger))if(!/^c[1-4]$/.test(id)||!e||!Number.isFinite(e.dose)||e.dose<0||!Number.isFinite(e.unknownSeconds)||e.unknownSeconds<0||!e.watch||typeof e.watch.active!=='boolean'||typeof e.watch.doseHold!=='boolean'||!Number.isFinite(e.watch.normalSamples)||e.watch.normalSamples<0)throw Error('Некорректные данные накопленной дозы.');
+ return ledger;
+}
+class DailyMedicalBook{
+ constructor(storage,roster,clock=()=>new Date()){
+  this.storage=storage;this.key='alpha-daily-medical-v1:'+encodeURIComponent(roster);this.clock=clock;this.exams=[];this.plans={};this.exposures={};this.warning='';this.persistent=!!storage;this.load();
+ }
+ today(){return localDay(this.clock());}
+ load(){
+  if(!this.storage){this.persistent=false;this.warning='Хранилище браузера недоступно. Данные сохранятся только до закрытия страницы; скачайте архив.';return;}
+  try{const raw=this.storage.getItem(this.key);if(!raw)return;const data=JSON.parse(raw);if(data.version!==1||!Array.isArray(data.exams)||!data.plans||typeof data.plans!=='object'||Array.isArray(data.plans))throw Error('Неизвестный формат архива.');const seen=new Set();for(const exam of data.exams){validateExam(exam);const key=exam.day+':'+exam.memberId;if(seen.has(key))throw Error('Повторный осмотр в архиве.');seen.add(key);}for(const [day,plan]of Object.entries(data.plans)){validateDailyPlan(plan);if(day!==plan.day)throw Error('Дата плана не совпадает с ключом архива.');}this.exams=data.exams;this.plans=data.plans;this.exposures=validateExposureLedger(data.exposures||{});}
+  catch(error){this.warning='Не удалось прочитать сохранённый журнал: '+error.message;this.persistent=false;this.storageCorrupt=true;}
+ }
+ persist(){
+  if(this.storageCorrupt){this.persistent=false;this.warning='Сохранённый архив повреждён и не перезаписан. Новые записи доступны в этой вкладке; скачайте их.';return false;}
+  try{if(!this.storage)throw Error('Хранилище недоступно');this.storage.setItem(this.key,JSON.stringify({version:1,exams:this.exams,plans:this.plans,exposures:this.exposures}));this.persistent=true;this.warning='';return true;}
+  catch{this.persistent=false;this.warning='Браузер не сохранил изменения. Они доступны в этой вкладке; скачайте архив медосмотров.';return false;}
+ }
+ get(day,id){return this.exams.find(e=>e.day===day&&e.memberId===id)||null;}
+ history(id){return this.exams.filter(e=>e.memberId===id).sort((a,b)=>a.day.localeCompare(b.day));}
+ record(day,member,data){
+  if(!validDay(day)||day>this.today())throw Error('Осмотр можно записать только за существующий день, не позже сегодняшнего.');
+  if(this.get(day,member.id))throw Error('Осмотр этого космонавта за выбранный день уже записан. Повторная запись запрещена.');
+  const exam=validateExam({day,memberId:member.id,name:member.name,values:{...data.values},fatigue:data.fatigue,dose:data.dose,trusted:data.trusted,symptoms:structuredClone(data.symptoms||[]),source:data.source,notes:String(data.notes||'').slice(0,500),recordedAt:this.clock().toISOString()});
+  const history=this.history(member.id),previous=history.filter(e=>e.day<day).at(-1),next=history.find(e=>e.day>day);
+  if(previous&&exam.dose<previous.dose||next&&exam.dose>next.dose)throw Error('Накопленная доза должна сохраняться или увеличиваться по датам; её нельзя обнулить отдыхом.');
+  this.exams.push(exam);this.persist();return structuredClone(exam);
+ }
+ comparison(day,id){
+  const current=this.get(day,id),previous=this.history(id).filter(e=>e.day<day).at(-1)||null;
+  if(!current||!previous)return {current,previous,delta:null};
+  return {current,previous,delta:{heart_rate:+(current.values.heart_rate-previous.values.heart_rate).toFixed(1),spO2:+(current.values.spO2-previous.values.spO2).toFixed(1),radiation_level:+(current.values.radiation_level-previous.values.radiation_level).toFixed(3),fatigue:+(current.fatigue-previous.fatigue).toFixed(1),dose:+(current.dose-previous.dose).toFixed(4)}};
+ }
+ updateExposure(members){
+  for(const m of members){const old=this.exposures[m.id];this.exposures[m.id]={dose:Math.max(old?.dose||0,m.dose),unknownSeconds:Math.max(old?.unknownSeconds||0,m.unknownDoseSeconds||0),watch:structuredClone(m.radiationWatch||{active:false,doseHold:false,normalSamples:0})};}
+  this.persist();
+ }
+ savePlan(day,plan){validateDailyPlan(plan);if(!validDay(day)||!plan||plan.day!==day)throw Error('Некорректный дневной план.');this.plans[day]=structuredClone(plan);this.persist();}
+ export(){return {version:1,rosterKey:this.key,exams:structuredClone(this.exams),plans:structuredClone(this.plans),exposures:structuredClone(this.exposures)};}
+ import(data){
+  if(data?.version!==1||data.rosterKey!==this.key||!Array.isArray(data.exams)||!data.plans||typeof data.plans!=='object'||Array.isArray(data.plans))throw Error('Архив относится к другому экипажу или имеет неверный формат.');
+  for(const [day,plan]of Object.entries(data.plans)){validateDailyPlan(plan);if(day!==plan.day)throw Error('Дата плана не совпадает с ключом архива.');}
+  const importedExposure=validateExposureLedger(data.exposures||{});
+  const merged=structuredClone(this.exams),seen=new Map(merged.map(e=>[e.day+':'+e.memberId,e]));
+  for(const entry of data.exams){const exam=validateExam(entry);if(exam.day>this.today())throw Error('В архиве есть осмотр из будущего.');const key=exam.day+':'+exam.memberId;if(seen.has(key)){if(JSON.stringify(seen.get(key))!==JSON.stringify(exam))throw Error('Конфликт: за этот день уже есть другой осмотр.');}else{const copy=structuredClone(exam);merged.push(copy);seen.set(key,copy);}}
+  for(const id of new Set(merged.map(e=>e.memberId))){const history=merged.filter(e=>e.memberId===id).sort((a,b)=>a.day.localeCompare(b.day));if(history.some((e,i)=>i&&e.dose<history[i-1].dose))throw Error('В архиве накопленная доза уменьшается по датам.');}
+  this.exams=merged;for(const [id,entry]of Object.entries(importedExposure)){const old=this.exposures[id];if(!old||entry.dose>old.dose)this.exposures[id]=structuredClone(entry);else if(entry.watch?.doseHold){this.exposures[id].watch={active:true,doseHold:true,normalSamples:0};}}for(const [day,plan]of Object.entries(data.plans)){if(validDay(day)&&plan?.day===day&&!Object.hasOwn(this.plans,day))this.plans[day]=structuredClone(plan);}this.persist();
+ }
+}
+
+
+// Synthetic educational rules only. Not a medical clearance model.
+const radiationRules={maxRate:5,doseHold:.1,stableSamples:5};
+function updateRadiationWatch(member){
+ const old=member.radiationWatch||{active:false,normalSamples:0,doseHold:false};
+ const highDose=member.dose>=radiationRules.doseHold;
+ if(highDose||member.trusted&&member.values.radiation_level>radiationRules.maxRate){member.radiationWatch={active:true,doseHold:highDose||old.doseHold,normalSamples:0};}
+ else if(old.active){const normal=member.trusted?old.normalSamples+1:0;member.radiationWatch={...old,normalSamples:normal,active:old.doseHold||normal<radiationRules.stableSamples};}
+ else member.radiationWatch=old;
+ return member.radiationWatch;
+}
+const tasks={
+ eva:{name:'Выход в открытый космос',duration:20,size:2,weights:{pulse:.2,oxygen:.5,radiation:.3},minOxygen:96,maxFatigue:65,doseBudget:.05,description:'Два участника выполняют осмотр внешнего корпуса; один остаётся в резерве.'},
+ repair:{name:'Ремонт оборудования',duration:17,size:1,weights:{pulse:.5,oxygen:.3,radiation:.2},minOxygen:95,maxFatigue:75,doseBudget:.08,description:'Один участник ремонтирует систему жизнеобеспечения. Важны стабильный пульс и запас сил.'},
+ research:{name:'Научный эксперимент',duration:16,size:1,weights:{pulse:.3,oxygen:.2,radiation:.5},minOxygen:94,maxFatigue:80,doseBudget:.1,description:'Один участник собирает образцы. Учитываются радиационная нагрузка и стабильность данных.'},
+ evacuation:{name:'Аварийное возвращение',duration:18,size:2,weights:{pulse:.35,oxygen:.4,radiation:.25},minOxygen:95,maxFatigue:70,doseBudget:.08,description:'Два участника готовят эвакуационный модуль. Требуется резерв на станции.'}
+};
+const missionScenarios={
+ station:{name:'Ремонт орбитальной станции',description:'Работа на орбите: гипоксия, подмена пакетов, радиация и перегрузка канала.',preferred:'repair',events:[[10,'hypoxia',0],[25,'mitm',2],[40,'radiation',1],[55,'dos',2]]},
+ surface:{name:'Исследование поверхности',description:'Выход группы: постепенное падение кислорода, неисправный датчик и радиационная вспышка.',preferred:'eva',events:[[10,'oxygen_trend',1],[29,'sensor',0],[46,'radiation',2],[62,'fatigue',1]]},
+ emergency:{name:'Аварийное возвращение',description:'Подготовка к эвакуации при перегрузке канала, стрессе и потере кислорода.',preferred:'evacuation',events:[[9,'dos',2],[23,'stress',0],[39,'hypoxia',1],[56,'sensor',2]]}
+};
+const bound=(n,min=0,max=100)=>Math.max(min,Math.min(max,n));
+function createCrew(name){return [
+ {id:'c1',name,role:'Бортинженер',values:{heart_rate:72,spO2:98,radiation_level:.7},fatigue:15},
+ {id:'c2',name:'Алина Каримова',role:'Специалист по выходам',values:{heart_rate:83,spO2:99,radiation_level:.4},fatigue:22},
+ {id:'c3',name:'Тимур Рахимов',role:'Исследователь',values:{heart_rate:65,spO2:96,radiation_level:.25},fatigue:18},
+ {id:'c4',name:'Анна Волкова',role:'Пилот',values:{heart_rate:104,spO2:93,radiation_level:.8},fatigue:52}
+].map(m=>({...m,baseline:{...m.values},trusted:true,lastTrusted:0,dose:0,history:[],symptoms:[],status:'rest'}));}
+function trendOf(member){
+ const samples=(member.history||[]).filter(s=>s.trusted).slice(-10);
+ const last=samples.at(-1);
+ if(samples.length<5||!last||member.lastTrusted-last.second>1)return {available:false,oxygen:0,pulse:0,label:'Нужно минимум 5 доверенных замеров'};
+ const first=samples[0],dt=last.second-first.second;
+ if(dt<=0||samples.some((s,i)=>i&&s.second-samples[i-1].second>2))return {available:false,oxygen:0,pulse:0,label:'Недостаточно непрерывных данных'};
+ const oxygen=(last.values.spO2-first.values.spO2)/dt,pulse=(last.values.heart_rate-first.values.heart_rate)/dt;
+ return {available:true,oxygen,pulse,label:oxygen<-.12?`SpO₂ снижается ${dt} с: ${first.values.spO2} → ${last.values.spO2}%`:pulse>1?`Пульс растёт ${dt} с: ${first.values.heart_rate} → ${last.values.heart_rate}`:'Показатели без выраженного ухудшения'};
+}
+function riskOf(member){
+ const trend=trendOf(member),reasons=[];
+ if(!member.trusted)reasons.push('измерения недостоверны');
+ if(trend.available&&trend.oxygen<-.12)reasons.push(trend.label);
+ if(trend.available&&trend.pulse>1)reasons.push('устойчивый рост пульса');
+ if((member.fatigue||0)>=65)reasons.push('высокая усталость');
+ if((member.symptoms||[]).some(s=>s.severe))reasons.push('есть выраженная жалоба');
+ const score=Math.round(bound((member.fatigue||0)*.4+(trend.available?Math.max(0,-trend.oxygen)*80+Math.max(0,trend.pulse)*8:0)+(!member.trusted?50:0)+(member.symptoms||[]).filter(s=>s.severe).length*30));
+ return {score,level:score>=55?'Высокий':score>=30?'Повышенный':'Низкий',reasons,trend,forecast:!member.trusted?'Прогноз недоступен: проверьте канал и датчик.':trend.available&&trend.oxygen<-.12?`При сохранении тенденции SpO₂ через 10 с: ${Math.max(0,member.values.spO2+trend.oxygen*10).toFixed(1)}%. Это линейная экстраполяция, не вероятность события.`:trend.available?'На ближайшие 10 с выраженного ухудшения по тренду не видно.':'Недостаточно истории для прогноза.'};
+}
+function assessCrew(crew,taskId){
+ const task=tasks[taskId];if(!task)throw new Error('Unknown task');
+ const ranked=crew.map(member=>{
+  const v=member.values,reasons=[],risk=riskOf(member);
+  if(member.requireDailyExam){
+   const exam=member.dailyExam;
+   if(!exam||exam.day!==member.medicalDay||exam.name!==member.name)reasons.push('обязательный медосмотр за день не пройден');
+   else{
+    const checked=assessCrew([{...member,requireDailyExam:false,values:exam.values,fatigue:exam.fatigue,dose:exam.dose,trusted:exam.trusted,symptoms:exam.symptoms,history:[],lastTrusted:0}],taskId).ranked[0];
+    reasons.push(...checked.reasons.map(reason=>'Медосмотр: '+reason));
+   }
+  }
+  const valid=v&&['heart_rate','spO2','radiation_level'].every(k=>Number.isFinite(v[k]));
+  if(!valid)reasons.push('неполные или некорректные данные');
+  if(!member.trusted)reasons.push('нет свежих доверенных измерений');
+  if(valid){if(v.heart_rate<50||v.heart_rate>100)reasons.push('пульс вне диапазона 50–100');if(v.spO2<task.minOxygen||v.spO2>100)reasons.push(`SpO₂ вне диапазона ${task.minOxygen}–100%`);if(v.radiation_level<.1||v.radiation_level>5)reasons.push('радиация вне диапазона 0.1–5');}
+  if((member.fatigue||0)>=task.maxFatigue)reasons.push('недостаточный запас сил');
+  if(member.radiationWatch?.active)reasons.push(member.radiationWatch.doseHold?'радиационное наблюдение: превышена суммарная доза, нужен пересмотр допуска':'защитное наблюдение: ожидаются 5 нормальных доверенных замеров фона');
+  if((member.dose||0)>=task.doseBudget)reasons.push('исчерпан учебный бюджет дозы');
+  if((member.symptoms||[]).some(s=>s.severe))reasons.push('выраженная жалоба космонавта');
+  if(risk.score>=55)reasons.push('высокий учебный индекс риска');
+  const parts=valid?{pulse:bound(100-Math.abs(v.heart_rate-70)*2),oxygen:bound((v.spO2-94)/6*100),radiation:bound((5-v.radiation_level)/4.9*100)}:{pulse:0,oxygen:0,radiation:0};
+  const medicalScore=Object.keys(task.weights).reduce((sum,k)=>sum+parts[k]*task.weights[k],0);
+  const stability=risk.trend.available?bound(100-Math.max(0,-risk.trend.oxygen)*100-Math.max(0,risk.trend.pulse)*10):50;
+  const score=Math.round(bound(medicalScore*.7+(100-(member.fatigue||0))*.15+stability*.1+bound((1-(member.dose||0)/task.doseBudget)*100)*.05));
+  return {...member,eligible:!reasons.length,reasons,score,parts,stability,risk};
+ }).sort((a,b)=>Number(b.eligible)-Number(a.eligible)||b.score-a.score||a.id.localeCompare(b.id));
+ const best=ranked.find(m=>m.eligible)||null;
+ return {taskId,task:task.name,ranked,best,explanation:best?`${best.name}: пульс ${best.values.heart_rate}, SpO₂ ${best.values.spO2}%, фон ${best.values.radiation_level.toFixed(2)} мкЗв/ч; усталость ${Math.round(best.fatigue||0)}%, доза ${(best.dose||0).toFixed(4)} мкЗв. Итог ${best.score}/100 — максимум среди доступных участников. Учтены история, жалобы и требования задания.`:'Подходящих кандидатов нет: отклонения, усталость, жалобы, доза или недостоверные данные. Задание отложено.'};
+}
+function planTeam(crew,taskId){
+ const assessment=assessCrew(crew,taskId),task=tasks[taskId],available=assessment.ranked.filter(m=>m.eligible&&m.status!=='working');
+ const team=available.slice(0,task.size),reserve=available[task.size]||null;
+ return {...assessment,team,reserve,ready:team.length===task.size&&!!reserve,reason:team.length<task.size?'Не хватает подходящих участников.':!reserve?'Нет подходящего резерва на станции.':'Группа и резерв подобраны по рейтингу; резерв не отправляется на задание.'};
+}
+class CrewMonitor{
+ constructor(crew){this.members=crew.map(m=>({...m,baseline:{...m.values},values:{...m.values},trusted:true,lastTrusted:0,history:[],symptoms:[],fatigue:m.fatigue||0,dose:m.dose||0,status:'rest',sensorFault:false}));this.elapsed=0;}
+ tick(elapsed,event){
+  const dt=Math.max(0,elapsed-this.elapsed);this.elapsed=elapsed;
+  this.members.forEach((m,i)=>{
+   const target=event?.target??(event?.type==='hypoxia'?0:event?.type==='radiation'?1:2),affected=event&&i===target,age=elapsed-(event?.started??elapsed);
+   const working=m.status==='working',testing=m.status==='testing';
+   m.fatigue=bound(m.fatigue+dt*(working?1.3:testing?.7:-.45)+(affected&&event.type==='fatigue'?dt*3:0));
+   m.sensorFault=!!(affected&&event.type==='sensor');
+   m.trusted=!(affected&&['mitm','dos','sensor'].includes(event.type));
+   m.symptoms=[];
+   if(m.fatigue>=55)m.symptoms.push({text:'Чувствую усталость, нужен отдых',severe:m.fatigue>=75});
+   if(affected&&['hypoxia','oxygen_trend'].includes(event.type))m.symptoms.push({text:age>=4?'Кружится голова, работать тяжело':'Появилась одышка',severe:age>=4});
+   if(affected&&event.type==='stress')m.symptoms.push({text:'Сильное сердцебиение при нагрузке',severe:age>=3});
+   if(m.trusted){
+    m.lastTrusted=elapsed;
+    m.values={heart_rate:Math.round(m.baseline.heart_rate+Math.sin(elapsed/5+i)*2+(working?5:testing?4:0)+(affected&&event.type==='hypoxia'?32:affected&&event.type==='stress'?age*3:0)),spO2:+(m.baseline.spO2+Math.sin(elapsed/7+i)*.2-(affected&&event.type==='hypoxia'?8:affected&&event.type==='oxygen_trend'?age*.28:0)).toFixed(1),radiation_level:+(m.baseline.radiation_level+Math.abs(Math.sin(elapsed/9+i))*.08+(affected&&event.type==='radiation'?7:0)).toFixed(2)};
+   }
+   // Integrate dose only from trusted measured rates. Missing intervals remain unknown.
+   if(m.trusted)m.dose+=m.values.radiation_level*dt/3600;else m.unknownDoseSeconds=(m.unknownDoseSeconds||0)+dt;
+   updateRadiationWatch(m);
+   m.history.push({second:elapsed,values:{...m.values},trusted:m.trusted,fatigue:m.fatigue,dose:m.dose});if(m.history.length>180)m.history.shift();
+  });
+ }
+}
+class MissionControl{
+ constructor(name,scenario='station',medicalBook=null){
+  if(!missionScenarios[scenario])throw new Error('Unknown scenario');
+  this.scenario=scenario;this.monitor=new CrewMonitor(createCrew(name));this.elapsed=0;this.duration=90;this.event=null;this.timeline=[];this.preflight=null;this.assignment=null;this.completed=[];this.finished=false;this.replacements=0;this.preflightResults=[];this.medicalBook=medicalBook;this.syncDailyExams();
+ }
+ record(type,text,detail={}){this.timeline.push({second:this.elapsed,type,text,...detail});}
+ syncDailyExams(){
+  const day=this.medicalBook?.today()||localDay();
+  this.monitor.members.forEach(m=>{m.requireDailyExam=true;m.medicalDay=day;m.dailyExam=this.medicalBook?.get(day,m.id)||m.dailyExam||null;
+   const exam=m.dailyExam;
+   if(this.medicalBook){const exposure=this.medicalBook.exposures?.[m.id];if(exposure){m.dose=Math.max(m.dose,exposure.dose);m.unknownDoseSeconds=Math.max(m.unknownDoseSeconds||0,exposure.unknownSeconds);if(!m.radiationWatch||exposure.watch.doseHold)m.radiationWatch=structuredClone(exposure.watch);}m.dose=Math.max(m.dose,...this.medicalBook.history(m.id).map(e=>e.dose));}
+   if(exam&&exam.day===day&&exam.name===m.name&&m.appliedDailyExam!==exam.recordedAt){m.appliedDailyExam=exam.recordedAt;if(exam.trusted){m.baseline={...exam.values};m.values={...exam.values};m.fatigue=exam.fatigue;}updateRadiationWatch(m);}
+   if(m.dose>=radiationRules.doseHold)updateRadiationWatch(m);});
+ }
+ assessment(taskId){this.syncDailyExams();return planTeam(this.monitor.members,taskId);}
+ startPreflight(taskId,planned=null){
+  if(this.finished||this.preflight?.status==='testing'||this.assignment?.status==='working'||this.assignment?.status==='paused')return false;
+  const plan=this.assessment(taskId);
+  if(planned){const ids=[...planned.ids,planned.reserveId];if(planned.ids.length!==tasks[taskId].size||new Set(ids).size!==ids.length||ids.some(id=>!plan.ranked.find(m=>m.id===id)?.eligible)){this.record('blocked','Дневной план не соответствует текущему состоянию экипажа.');return false;}}
+  if(!plan.ready){this.record('blocked',plan.reason);return false;}
+  const ids=plan.ranked.filter(m=>m.eligible).map(m=>m.id);
+  this.preflight={taskId,ids,planned:planned?structuredClone(planned):null,started:this.elapsed,status:'testing',before:this.monitor.members.filter(m=>ids.includes(m.id)).map(m=>({id:m.id,values:{...m.values}}))};
+  this.monitor.members.forEach(m=>m.status=ids.includes(m.id)?'testing':'rest');this.record('preflight','Начата 4-секундная учебная проба нагрузки: группа и резерв.',{ids,taskId});return true;
+ }
+ assign(taskId){
+  if(this.finished||['working','paused'].includes(this.assignment?.status))return false;
+  const p=this.preflight,plan=this.assessment(taskId);
+  if(p?.planned){plan.team=p.planned.ids.map(id=>plan.ranked.find(m=>m.id===id));plan.reserve=plan.ranked.find(m=>m.id===p.planned.reserveId);plan.ready=plan.team.length===tasks[taskId].size&&plan.team.every(m=>m?.eligible)&&!!plan.reserve?.eligible;}
+  if(!p||p.status!=='passed'||p.taskId!==taskId||this.elapsed-p.finishedAt>25||!plan.ready||[...plan.team.map(m=>m.id),plan.reserve.id].some(id=>!p.ids.includes(id))){this.record('blocked','Назначение отклонено: нужна свежая успешная проверка всей группы и резерва.');return false;}
+  this.assignment={taskId,ids:plan.team.map(m=>m.id),reserveId:plan.reserve.id,status:'working',progress:0,started:this.elapsed,replacements:[],participants:[...plan.team.map(m=>m.id)]};
+  this.monitor.members.forEach(m=>m.status=this.assignment.ids.includes(m.id)?'working':'rest');
+  this.assignment.medicalDay=this.monitor.members[0].medicalDay;
+  this.record('assignment',`Назначено задание «${tasks[taskId].name}». Резерв остаётся на станции.`,{ids:[...this.assignment.ids],reserveId:plan.reserve.id});return true;
+ }
+ cancel(){
+  if(this.finished)return false;
+  if(this.assignment&&['working','paused'].includes(this.assignment.status)){this.assignment.status='cancelled';this.record('cancelled','Задание отменено, участники переведены на отдых.');}
+  if(this.preflight?.status==='testing')this.preflight.status='cancelled';
+  this.monitor.members.forEach(m=>m.status='rest');return true;
+ }
+ replacementPlan(){
+  const a=this.assignment;if(!a||a.status!=='paused')return null;
+  this.syncDailyExams();const ranked=assessCrew(this.monitor.members,a.taskId).ranked;
+  const bad=a.ids.filter(id=>!ranked.find(m=>m.id===id)?.eligible);
+  const fresh=this.preflight?.status==='passed'&&this.elapsed-this.preflight.finishedAt<=25;
+  const tested=new Set(fresh?this.preflight.ids:[]);
+  const candidates=ranked.filter(m=>m.eligible&&!a.ids.includes(m.id)&&tested.has(m.id));
+  const ids=a.ids.filter(id=>!bad.includes(id)).concat(candidates.slice(0,bad.length).map(m=>m.id));
+  const reserve=ranked.find(m=>m.eligible&&!ids.includes(m.id)&&tested.has(m.id));
+  return {bad,candidates,ids,reserve,ready:ids.length===tasks[a.taskId].size&&!!reserve,reason:!candidates.length?'Нет подходящего участника с пройденной проверкой.':!reserve?'После замены не остаётся здорового резерва.':'Подобрана замена с пройденной проверкой и резерв.'};
+ }
+ replace(){
+  const p=this.replacementPlan();if(this.finished||!p?.ready)return false;
+  const a=this.assignment,old=[...a.ids];a.ids=p.ids;a.reserveId=p.reserve.id;a.status='working';a.participants=[...new Set([...a.participants,...a.ids])];a.replacements.push({second:this.elapsed,old,new:[...a.ids]});this.replacements++;
+  this.monitor.members.forEach(m=>m.status=a.ids.includes(m.id)?'working':'rest');this.record('replacement','Выполнена замена участника; задание продолжается.',{old,ids:[...a.ids],reserveId:a.reserveId});return true;
+ }
+ tick(){
+  if(this.finished)return;this.syncDailyExams();this.elapsed++;
+  const schedule=missionScenarios[this.scenario].events;
+  if(this.event&&this.elapsed-this.event.started>=9){this.record('recovery','Событие завершено; состояние и достоверность данных проверяются заново.');this.event=null;}
+  const next=schedule.find(([second])=>second===this.elapsed);
+  if(next){this.event={type:next[1],target:next[2],started:this.elapsed};this.record('alert',eventDescription(this.event,this.monitor.members));}
+  this.monitor.tick(this.elapsed,this.event);
+  this.medicalBook?.updateExposure(this.monitor.members);
+  const p=this.preflight;
+  if(p?.status==='testing'&&this.elapsed-p.started>=4){
+   const assessment=assessCrew(this.monitor.members,p.taskId);
+   p.results=p.before.map(before=>{const after=this.monitor.members.find(m=>m.id===before.id),a=assessment.ranked.find(m=>m.id===before.id);const pulseDelta=after.values.heart_rate-before.values.heart_rate,oxygenDelta=+(after.values.spO2-before.values.spO2).toFixed(1);return {id:after.id,name:after.name,before:before.values,after:{...after.values},pulseDelta,oxygenDelta,passed:a.eligible&&pulseDelta<=12&&oxygenDelta>=-1,reasons:a.reasons};});
+   p.status=p.results.every(r=>r.passed)?'passed':'failed';p.finishedAt=this.elapsed;this.preflightResults.push(structuredClone(p));this.monitor.members.forEach(m=>m.status='rest');this.record('preflight',p.status==='passed'?'Проба нагрузки пройдена: группа готова к назначению.':'Проба нагрузки не пройдена; назначение заблокировано.',{results:p.results});
+  }
+  const a=this.assignment;
+  if(a&&['working','paused'].includes(a.status)){
+   this.syncDailyExams();const ranked=assessCrew(this.monitor.members,a.taskId).ranked;
+   const bad=a.ids.filter(id=>!ranked.find(m=>m.id===id)?.eligible);
+   const reserveGood=ranked.find(m=>m.id===a.reserveId)?.eligible;
+   if((bad.length||!reserveGood)&&a.status==='working'){a.status='paused';a.pauseReason=bad.length?'У назначенного участника ухудшение состояния или потеря данных.':'Резерв недоступен.';this.monitor.members.forEach(m=>m.status='rest');this.record('pause',a.pauseReason+' Задание приостановлено.',{ids:bad});}
+   else if(!bad.length&&a.status==='paused'){
+    const reserve=ranked.find(m=>m.eligible&&!a.ids.includes(m.id));
+    if(reserve){a.reserveId=reserve.id;a.status='working';this.monitor.members.forEach(m=>m.status=a.ids.includes(m.id)?'working':'rest');this.record('resume','Показатели восстановились; резерв подтверждён, задание возобновлено.');}
+   }
+   if(a.status==='working'){
+    a.progress++;
+    if(a.progress>=tasks[a.taskId].duration){a.status='completed';a.finished=this.elapsed;this.completed.push(structuredClone(a));this.monitor.members.forEach(m=>m.status='rest');this.record('completed',`Задание «${tasks[a.taskId].name}» выполнено. Участники отдыхают.`);}
+   }
+  }
+  if(this.elapsed>=this.duration)this.finish();
+ }
+ finish(){if(!this.finished){this.finished=true;if(this.preflight?.status==='testing')this.preflight.status='interrupted';if(this.assignment&&['working','paused'].includes(this.assignment.status))this.assignment.status='interrupted';this.monitor.members.forEach(m=>m.status='rest');this.record('finish','Наблюдение завершено.');}return this.report();}
+ report(){return {simulation:true,scenario:this.scenario,seconds:this.elapsed,finished:this.finished,completed:structuredClone(this.completed),assignment:structuredClone(this.assignment),preflights:structuredClone(this.preflightResults),timeline:structuredClone(this.timeline),crew:structuredClone(this.monitor.members),replacements:this.replacements};}
+}
+function eventDescription(event,members){
+ const labels={hypoxia:'Падение кислорода и учащённый пульс',radiation:'Повышенный радиационный фон',mitm:'Подмена телеметрии: пакет отклонён',dos:'Перегрузка канала телеметрии',sensor:'Сбой датчика: ложный SpO₂ 52%, измерение отклонено',oxygen_trend:'Постепенное снижение кислорода',fatigue:'Рост усталости',stress:'Учащённый пульс при нагрузке'};
+ return members[event.target].name+': '+labels[event.type];
+}
+
+function makeDailyPlan(members,book,day,requests){
+ if(!Array.isArray(requests)||requests.some(r=>!tasks[r.taskId]||!Number.isInteger(r.hour)||r.hour<0||r.hour>23))throw Error('Проверьте время и тип заданий.');
+ const slots=new Set();for(const r of requests){if(slots.has(r.hour))throw Error('На один час допускается только одно задание.');slots.add(r.hour);}
+ const workload=new Map(),rows=[];
+ for(const request of [...requests].sort((a,b)=>a.hour-b.hour)){
+  const crew=members.map(m=>{const exam=book.get(day,m.id);return {...m,requireDailyExam:true,medicalDay:day,dailyExam:exam,values:exam?.values||m.values,fatigue:(exam?.fatigue||0)+(workload.get(m.id)||0),dose:exam?.dose||0,trusted:exam?.trusted??false,symptoms:exam?.symptoms||[],history:[],status:'rest',radiationWatch:exam?{active:exam.values.radiation_level>radiationRules.maxRate||exam.dose>=radiationRules.doseHold,doseHold:exam.dose>=radiationRules.doseHold,normalSamples:0}:m.radiationWatch};});
+  const plan=planTeam(crew,request.taskId),row={hour:request.hour,taskId:request.taskId,status:plan.ready?'planned':'blocked',ids:plan.ready?plan.team.map(m=>m.id):[],reserveId:plan.ready?plan.reserve.id:null,reason:plan.ready?'Назначено по медосмотру за '+day+' с учётом накопления учебной нагрузки.':plan.reason,comparison:plan.ranked.map(m=>({id:m.id,name:m.name,eligible:m.eligible,score:m.score,reasons:m.reasons}))};
+  if(plan.ready)for(const member of plan.team)workload.set(member.id,(workload.get(member.id)||0)+12);
+  rows.push(row);
+ }
+ return {day,createdAt:new Date().toISOString(),rows};
+}
+
+
+const dailyNode=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
+class DailyMedicalUI{
+ constructor(mission,book,onChange,onExecute){
+  this.$=id=>document.getElementById(id);this.onChange=onChange;this.onExecute=onExecute;this.requests=[];
+  this.$('medical-day').addEventListener('change',()=>{this.plan=null;this.requestsDirty=false;this.render();});this.$('medical-member').addEventListener('change',()=>this.render());this.$('history-range').addEventListener('change',()=>this.renderHistory());
+  this.$('capture-exam').addEventListener('click',()=>this.capture());
+  this.$('daily-exam-form').addEventListener('submit',e=>{e.preventDefault();this.save();});
+  for(const id of ['exam-hr','exam-oxygen','exam-radiation','exam-fatigue','exam-dose','exam-notes','exam-trusted','exam-severe'])this.$(id).addEventListener('input',()=>{this.source='manual';});
+  this.$('generate-day-plan').addEventListener('click',()=>{try{const requests=this.requests.map(row=>({hour:Number(row.hour.value),taskId:row.task.value}));this.requestsDirty=false;this.plan=makeDailyPlan(this.mission.monitor.members,this.book,this.day(),requests);this.$('plan-feedback').textContent='План рассчитан. Проверьте участников и причины отложенных заданий.';this.renderPlan();}catch(error){this.$('plan-feedback').textContent=error.message;}});
+  this.$('save-day-plan').addEventListener('click',()=>{try{if(!this.plan||this.plan.day!==this.day())throw Error('Сначала рассчитайте план для выбранного дня.');this.book.savePlan(this.day(),this.plan);this.$('plan-feedback').textContent=this.book.persistent?'План сохранён в браузере.':this.book.warning;this.status();}catch(error){this.$('plan-feedback').textContent=error.message;}});
+  this.$('export-medical').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(this.book.export(),null,2)],{type:'application/json'})),a=dailyNode('a');a.href=url;a.download='alpha-daily-medical.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+  this.$('import-medical').addEventListener('change',async()=>{try{const file=this.$('import-medical').files?.[0];if(!file)return;if(file.size>5000000)throw Error('Архив слишком большой (максимум 5 МБ).');this.book.import(JSON.parse(await file.text()));this.mission.syncDailyExams();this.render();this.onChange();this.$('exam-feedback').textContent='Архив загружен без перезаписи существующих осмотров.';}catch(error){this.$('exam-feedback').textContent=error.message;}});
+  window.addEventListener('resize',()=>this.renderHistory());this.setContext(mission,book);
+ }
+ setContext(mission,book){this.mission=mission;this.book=book;this.plan=null;this.$('medical-day').value=book.today();this.$('medical-day').max=book.today();this.$('history-range').value='7';this.$('medical-member').replaceChildren();for(const m of mission.monitor.members){const option=dailyNode('option',m.name);option.value=m.id;this.$('medical-member').append(option);}this.$('medical-member').value=mission.monitor.members[0].id;this.createRequests();this.render();}
+ day(){return this.$('medical-day').value;}
+ member(){return this.mission.monitor.members.find(m=>m.id===this.$('medical-member').value)||this.mission.monitor.members[0];}
+ status(){const today=this.book.today(),missing=this.mission.monitor.members.filter(m=>!this.book.get(today,m.id));this.$('daily-coverage').textContent=(4-missing.length)+'/4 · '+today;this.$('daily-gate').textContent=missing.length?'Миссия ожидает ежедневный медосмотр: '+missing.map(m=>m.name).join(', ')+'. Осмотр нужен каждому участнику один раз за сегодняшний день.':'Все четыре осмотра за сегодня записаны. Назначение зависит от результатов и текущей телеметрии.';this.$('daily-gate').classList.toggle('blocked',!!missing.length);this.$('storage-warning').textContent=this.book.warning;this.$('medical-day').max=today;}
+ fill(data){for(const [id,value]of Object.entries({'exam-hr':data.values.heart_rate,'exam-oxygen':data.values.spO2,'exam-radiation':data.values.radiation_level,'exam-fatigue':Number(data.fatigue.toFixed(1)),'exam-dose':Math.ceil(data.dose*1000000)/1000000}))this.$(id).value=value;this.$('exam-notes').value=data.notes||data.symptoms.map(s=>s.text).join('. ');this.$('exam-trusted').checked=data.trusted;this.$('exam-severe').checked=data.symptoms.some(s=>s.severe);}
+ capture(){if(this.day()!==this.book.today()){this.$('exam-feedback').textContent='Снимок текущей симуляции можно записать только за сегодня. Архивные результаты вводятся вручную.';return;}if(this.book.get(this.day(),this.member().id))return;this.fill(this.member());this.source='simulation';this.$('exam-feedback').textContent='Подставлены текущие синтетические измерения. Нажмите «Записать медосмотр» для фиксации.';}
+ save(){try{const number=id=>{const text=String(this.$(id).value).trim();if(!text)throw Error('Заполните все числовые показатели.');return Number(text);};const notes=this.$('exam-notes').value.trim(),severe=this.$('exam-severe').checked;
+  this.book.record(this.day(),this.member(),{values:{heart_rate:number('exam-hr'),spO2:number('exam-oxygen'),radiation_level:number('exam-radiation')},fatigue:number('exam-fatigue'),dose:number('exam-dose'),trusted:this.$('exam-trusted').checked,symptoms:notes||severe?[{text:notes||'Выраженная жалоба',severe}]:[],notes,source:this.source||'manual'});
+  this.mission.syncDailyExams();this.plan=null;this.requestsDirty=false;this.render();this.onChange();this.$('exam-feedback').textContent='Осмотр записан. Повторная запись за эту дату заблокирована. '+(this.book.warning||'');
+ }catch(error){this.$('exam-feedback').textContent=error.message;}}
+ render(){this.status();const exam=this.book.get(this.day(),this.member().id),locked=!!exam;
+ this.$('exam-status').textContent=locked?'ОСМОТР ЗАПИСАН':'ОСМОТР НЕ ПРОЙДЕН';
+ for(const id of ['exam-hr','exam-oxygen','exam-radiation','exam-fatigue','exam-dose','exam-notes','exam-trusted','exam-severe','save-exam','capture-exam'])this.$(id).disabled=locked;
+ this.$('capture-exam').disabled=locked||this.day()!==this.book.today();
+ this.fill(exam||this.member());this.source=exam?.source||(this.day()===this.book.today()?'simulation':'manual');if(!exam&&this.day()!==this.book.today()){for(const id of ['exam-hr','exam-oxygen','exam-radiation','exam-fatigue','exam-dose','exam-notes'])this.$(id).value='';}this.$('exam-feedback').textContent=locked?`Записано ${exam.recordedAt||''}. Источник: ${exam.source==='simulation'?'симуляция':'ручной ввод'}.`:'Проверьте значения и запишите осмотр. До записи назначения блокируются.';
+ this.renderHistory();this.renderPlan();}
+ renderHistory(){const member=this.member(),comparison=this.book.comparison(this.day(),member.id);this.$('daily-comparison-title').textContent=member.name+' / сравнение осмотров';const box=this.$('daily-comparison');box.replaceChildren();
+ if(comparison.current&&!comparison.current.trusted||comparison.previous&&!comparison.previous.trusted)box.append(dailyNode('p','В сравнении есть недостоверные измерения: они не подтверждают допуск.','bad-value'));
+ if(!comparison.current)box.append(dailyNode('p','За выбранный день осмотр не записан.','warning-value'));
+ else if(!comparison.previous)box.append(dailyNode('p','Первый сохранённый осмотр. Для сравнения нужен ещё один день.'));
+ else{box.append(dailyNode('p',`${this.day()} ↔ ${comparison.previous.day}. Сравнение с предыдущим доступным осмотром, не обязательно с предыдущим календарным днём.`));for(const [key,label,unit]of [['heart_rate','Пульс','уд/мин'],['spO2','Кислород','п.п.'],['radiation_level','Фон','мкЗв/ч'],['fatigue','Усталость','п.п.'],['dose','Доза','мкЗв']]){const delta=comparison.delta[key];box.append(dailyNode('span',`${label}: ${delta>0?'+':''}${delta} ${unit}`,'daily-delta'));}}
+ let history=this.book.history(member.id).filter(e=>e.day<=this.day());const count=this.$('history-range').value;if(count!=='all')history=history.slice(-Number(count||7));this.$('history-empty').textContent=history.length?`${history.length} сохранённых осмотров. Пропущенные дни не заменяются вымышленными данными. Красные столбцы — недостоверные измерения.`:'История пуста. Запишите осмотр; диаграммы появятся после сохранения. Для сравнения добавьте результаты за другой день.';
+ const body=this.$('daily-history-body');body.replaceChildren();for(const e of [...history].reverse()){const row=dailyNode('tr');for(const text of [e.day,e.values.heart_rate,e.values.spO2,e.values.radiation_level,e.fatigue,e.dose.toFixed(4),(e.source==='simulation'?'симуляция':'вручную')+' / '+(e.trusted?'достоверно':'недостоверно')])row.append(dailyNode('td',text));body.append(row);}
+ for(const [id,key]of [['daily-hr-chart','heart_rate'],['daily-oxygen-chart','spO2'],['daily-radiation-chart','radiation_level'],['daily-fatigue-chart','fatigue'],['daily-dose-chart','dose']])this.drawDiagram(this.$(id),history,key);
+ }
+ drawDiagram(canvas,history,key){const rect=canvas.getBoundingClientRect();if(!rect.width)return;const ctx=canvas.getContext('2d');if(!ctx)return;const dpr=window.devicePixelRatio||1,w=rect.width,h=150;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);ctx.font='9px monospace';ctx.fillStyle='#8fa6b4';if(!history.length){ctx.fillText('Нет сохранённых осмотров',12,60);return;}const values=history.map(e=>e.values[key]??e[key]),max=Math.max(...values,1)*1.2,barWidth=(w-42)/history.length;
+ ctx.strokeStyle='#2b3e4b';for(let i=0;i<4;i++){const y=110-i*30;ctx.beginPath();ctx.moveTo(32,y);ctx.lineTo(w,y);ctx.stroke();ctx.fillStyle='#8fa6b4';ctx.fillText((max*i/3).toFixed(max<1?3:0),0,y+3);}
+ history.forEach((e,i)=>{const height=values[i]/max*90,x=34+i*barWidth;ctx.fillStyle=e.trusted?'#61e2d3':'#ff576c';ctx.fillRect(x+barWidth*.15,110-height,barWidth*.7,height);ctx.fillStyle='#c8dce5';if(history.length<=7)ctx.fillText(values[i].toFixed(key==='dose'?4:key==='radiation_level'?2:1),x,104-height);if(history.length<=7||i===0||i===history.length-1){ctx.save();ctx.translate(x+3,123);ctx.rotate(-.3);ctx.fillStyle='#8fa6b4';ctx.fillText(e.day.slice(5),0,0);ctx.restore();}});
+ }
+ createRequests(){const root=this.$('daily-plan-requests');root.replaceChildren();this.requests=[];for(const [i,taskId]of ['repair','research','eva','evacuation'].entries()){const row=dailyNode('div',undefined,'daily-request'),label=dailyNode('label','ЧАС'),hour=dailyNode('input');hour.type='number';hour.min='0';hour.max='23';hour.step='1';hour.value=[9,11,14,16][i];hour.setAttribute('aria-label','Час задания '+(i+1));label.append(hour);const select=dailyNode('select');select.setAttribute('aria-label','Задание '+(i+1));for(const [id,t]of Object.entries(tasks)){const option=dailyNode('option',t.name);option.value=id;select.append(option);}select.value=taskId;row.append(label,select);root.append(row);this.requests.push({hour,task:select});for(const el of [hour,select])el.addEventListener('input',()=>{this.plan=null;this.requestsDirty=true;this.$('daily-plan-results').replaceChildren(dailyNode('p','Параметры изменены — пересчитайте дневной план.','warning-value'));this.$('save-day-plan').disabled=true;this.$('plan-feedback').textContent='Задания изменены — пересчитайте план перед сохранением.';});}}
+ renderPlan(){this.$('plan-date').textContent=this.day();const plan=this.plan||(!this.requestsDirty?this.book.plans[this.day()]:null);const root=this.$('daily-plan-results');root.replaceChildren();this.$('save-day-plan').disabled=!this.plan;if(!plan){root.append(dailyNode('p','План за этот день ещё не составлен.','small muted'));return;}
+ for(const row of plan.rows||[]){const card=dailyNode('article',undefined,'daily-plan-row');const name=id=>this.mission.monitor.members.find(m=>m.id===id)?.name||id;card.append(dailyNode('h3',`${String(row.hour).padStart(2,'0')}:00 / ${tasks[row.taskId]?.name||row.taskId}`),dailyNode('p',row.status==='planned'?`Группа: ${row.ids.map(name).join(', ')}. Резерв: ${name(row.reserveId)}.`:'Задание отложено: подходящая группа не найдена.',row.status==='planned'?'':'bad-value'),dailyNode('p',row.reason,'small muted'));
+ const details=dailyNode('details'),summary=dailyNode('summary','Почему назначены эти участники');details.append(summary);for(const c of row.comparison||[])details.append(dailyNode('p',`${c.name}: ${c.eligible?c.score+'/100':c.reasons.join('; ')}`));card.append(details);
+ const execute=dailyNode('button','Подготовить выполнение','secondary');execute.disabled=row.status!=='planned'||this.day()!==this.book.today()||this.mission.finished;execute.addEventListener('click',()=>{this.$('plan-feedback').textContent=this.onExecute(row,this.day());});card.append(execute);root.append(card);}
+ }
+}
+
+// Dependency-free WebGL scene; bundled into the offline HTML.
+const identity=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+function multiply(a,b){const out=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)out[c*4+r]+=a[k*4+r]*b[c*4+k];return out;}
+function modelMatrix(position,scale,rotation=0){const m=identity(),c=Math.cos(rotation),s=Math.sin(rotation);m[0]=c*scale[0];m[1]=s*scale[0];m[4]=-s*scale[1];m[5]=c*scale[1];m[10]=scale[2];m[12]=position[0];m[13]=position[1];m[14]=position[2];return m;}
+function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=120,m=new Float32Array(16);m[0]=f/aspect;m[5]=f;m[10]=(far+near)/(near-far);m[11]=-1;m[14]=2*far*near/(near-far);return m;}
+function lookAt(eye,target){const sub=(a,b)=>a.map((v,i)=>v-b[i]),norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n)},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((n,v,i)=>n+v*b[i],0);const z=norm(sub(eye,target)),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);}
+function cubeVertices(){const out=[],faces=[[[1,0,0],[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1]]],[[-1,0,0],[[-1,-1,1],[-1,1,1],[-1,1,-1],[-1,-1,-1]]],[[0,1,0],[[-1,1,-1],[-1,1,1],[1,1,1],[1,1,-1]]],[[0,-1,0],[[-1,-1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1]]],[[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],[[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]]];for(const [n,v]of faces)for(const i of [0,1,2,0,2,3])out.push(...v[i],...n);return out;}
+function sphereVertices(){const out=[],point=(a,b)=>[Math.sin(a)*Math.cos(b),Math.cos(a),Math.sin(a)*Math.sin(b)];for(let i=0;i<14;i++)for(let j=0;j<20;j++){const p=[point(i/14*Math.PI,j/20*Math.PI*2),point((i+1)/14*Math.PI,j/20*Math.PI*2),point((i+1)/14*Math.PI,(j+1)/20*Math.PI*2),point(i/14*Math.PI,(j+1)/20*Math.PI*2)];for(const k of [0,1,2,0,2,3])out.push(...p[k],...p[k]);}return out;}
+class MissionScene{
+ constructor(canvas,fallback){
+  this.canvas=canvas;this.fallback=fallback;this.time=0;this.last=0;this.state={task:'repair',scenario:'station',status:'waiting',progress:0,team:1};this.reset();
+  const gl=canvas.getContext('webgl',{antialias:true,alpha:false});this.gl=gl;
+  if(!gl){fallback.hidden=false;canvas.hidden=true;return;}
+  try{this.init();}catch(error){fallback.hidden=false;canvas.hidden=true;this.gl=null;return;}
+  this.drag=null;
+  canvas.addEventListener('pointerdown',e=>{this.drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointermove',e=>{if(!this.drag)return;this.azimuth+=(e.clientX-this.drag[0])*.008;this.elevation=Math.max(-.1,Math.min(1.1,this.elevation+(e.clientY-this.drag[1])*.006));this.drag=[e.clientX,e.clientY];});
+  canvas.addEventListener('pointerup',()=>this.drag=null);canvas.addEventListener('pointercancel',()=>this.drag=null);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();this.radius=Math.max(6,Math.min(20,this.radius+e.deltaY*.01));},{passive:false});
+  canvas.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-','='].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft')this.azimuth-=.1;if(e.key==='ArrowRight')this.azimuth+=.1;if(e.key==='ArrowUp')this.elevation=Math.min(1.1,this.elevation+.1);if(e.key==='ArrowDown')this.elevation=Math.max(-.1,this.elevation-.1);if(['+','='].includes(e.key))this.radius=Math.max(6,this.radius-.5);if(e.key==='-')this.radius=Math.min(20,this.radius+.5);}});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.gl=null;fallback.hidden=false;});
+  this.frame=this.frame.bind(this);requestAnimationFrame(this.frame);
+ }
+ reset(){this.azimuth=.4;this.elevation=.23;this.radius=10.8;}
+ init(){const gl=this.gl;
+  const compile=(type,code)=>{const shader=gl.createShader(type);gl.shaderSource(shader,code);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(shader));return shader;};
+  const vs=compile(gl.VERTEX_SHADER,'attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uModel;uniform mat4 uView;varying vec3 vNormal;varying vec3 vWorld;void main(){vec4 world=uModel*vec4(aPosition,1.0);vWorld=world.xyz;vNormal=mat3(uModel)*aNormal;gl_Position=uView*world;}');
+  const fs=compile(gl.FRAGMENT_SHADER,'precision mediump float;uniform vec3 uColor;uniform float uGlow;varying vec3 vNormal;varying vec3 vWorld;void main(){vec3 normal=normalize(vNormal);float light=max(dot(normal,normalize(vec3(-0.4,0.8,0.7))),0.0);float rim=pow(1.0-abs(normal.z),2.0)*0.12;vec3 color=uColor*(0.32+light*0.68+rim)+uColor*uGlow;float fog=clamp(length(vWorld)/80.0,0.0,0.6);gl_FragColor=vec4(mix(color,vec3(0.026,0.047,0.065),fog),1.0);}');
+  const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL link failed');this.program=program;gl.useProgram(program);
+  this.loc={position:gl.getAttribLocation(program,'aPosition'),normal:gl.getAttribLocation(program,'aNormal'),model:gl.getUniformLocation(program,'uModel'),view:gl.getUniformLocation(program,'uView'),color:gl.getUniformLocation(program,'uColor'),glow:gl.getUniformLocation(program,'uGlow')};this.meshes={};
+  for(const [name,vertices]of [['cube',cubeVertices()],['sphere',sphereVertices()]]){const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);this.meshes[name]={buffer,count:vertices.length/6};}
+  gl.enable(gl.DEPTH_TEST);gl.clearColor(.026,.047,.065,1);
+ }
+ update(state){this.state=state;const taskNames={eva:'ВЫХОД В ОТКРЫТЫЙ КОСМОС',repair:'РЕМОНТ ОБОРУДОВАНИЯ',research:'НАУЧНЫЙ ЭКСПЕРИМЕНТ',evacuation:'АВАРИЙНОЕ ВОЗВРАЩЕНИЕ'};const status={working:'Участники выполняют задание',paused:'Работа приостановлена',waiting:'Проверка и назначение экипажа',completed:'Задание выполнено',cancelled:'Задание отменено',interrupted:'Задание прервано',finished:'Миссия завершена'};document.getElementById('scene-task-label').textContent=taskNames[state.task];document.getElementById('scene-status-label').textContent=status[state.status]||'Подготовка';document.getElementById('scene-progress-label').textContent=Math.round(state.progress*100)+'%';}
+ draw(mesh,pos,scale,color,rotation=0,glow=0){const gl=this.gl,m=this.meshes[mesh];gl.bindBuffer(gl.ARRAY_BUFFER,m.buffer);gl.enableVertexAttribArray(this.loc.position);gl.enableVertexAttribArray(this.loc.normal);gl.vertexAttribPointer(this.loc.position,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(this.loc.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(this.loc.model,false,modelMatrix(pos,scale,rotation));gl.uniform3fv(this.loc.color,color);gl.uniform1f(this.loc.glow,glow);gl.drawArrays(gl.TRIANGLES,0,m.count);}
+ astronaut(x,y,z,index,working){const float=this.state.scenario==='surface'?0:Math.sin(this.time+index)*.1;y+=float;const suit=index===0?[.79,.85,.86]:[.52,.68,.76],dark=[.12,.23,.29],cyan=[.2,.8,.73],s=this.draw.bind(this,'sphere'),b=this.draw.bind(this,'cube'),move=working?Math.sin(this.time*3+index)*.24:0;
+  b([x,y,z],[.29,.43,.19],suit);b([x,y,z-.25],[.25,.36,.13],dark);s([x,y+.73,z],[.37,.38,.33],suit);s([x,y+.75,z+.19],[.28,.23,.18],[.06,.2,.28]);b([x,y+.02,z+.21],[.16,.12,.035],dark);b([x,y+.02,z+.25],[.1,.02,.01],cyan,0,.4);
+  for(const side of [-1,1]){b([x+side*.38,y+.04,z],[.1,.3,.11],suit,-side*(.2+move));s([x+side*(.46+move*.2),y-.23,z+.06],[.1,.12,.12],dark);b([x+side*.15,y-.69,z],[.12,.32,.12],suit,side*.05);b([x+side*.15,y-1.01,z+.05],[.14,.1,.21],dark);}
+  if(working&&['repair','eva'].includes(this.state.task)){s([x+.6,y-.1,z+.25],[.06,.06,.06],[.4,.9,1],0,.7+Math.sin(this.time*16)*.3);b([x+.55,y-.2,z+.14],[.04,.13,.04],[.6,.65,.68],-.6);}
+ }
+ station(){const b=this.draw.bind(this,'cube'),s=this.draw.bind(this,'sphere');b([2,.3,-1.4],[1.5,.8,.8],[.5,.6,.65]);s([.5,.3,-1.4],[.45,.8,.8],[.33,.43,.49]);b([2,.3,-.58],[.7,.35,.03],[.12,.23,.3]);b([2,.3,-.53],[.5,.035,.02],[.2,.8,.73],0,.25);b([2,.3,-2.4],[.3,.2,.4],[.3,.4,.48]);for(const side of [-1,1]){const x=2+side*2.9;b([x,.5,-1.5],[1.35,.045,.85],[.08,.27,.43]);for(let i=-3;i<=3;i++)b([x+i*.35,.55,-1.5],[.008,.015,.83],[.4,.63,.7]);for(const z of [-2.1,-1.5,-.9])b([x,.56,z],[1.34,.01,.008],[.4,.63,.7]);}for(let x=.7;x<3.5;x+=.7)b([x,-.48,-.55],[.018,.08,.018],[.68,.74,.77]);}
+ frame(timestamp){
+  if(!this.gl)return;requestAnimationFrame(this.frame);if(!this.canvas.getBoundingClientRect().width){this.last=timestamp;return;}
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,dt=Math.min(.05,(timestamp-(this.last||timestamp))/1000);this.last=timestamp;if(!['paused','finished','interrupted'].includes(this.state.status)&&!reduced)this.time+=dt;
+  const gl=this.gl,rect=this.canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),w=Math.round(rect.width*dpr),h=Math.round(rect.height*dpr);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.program);
+  const eye=[Math.sin(this.azimuth)*Math.cos(this.elevation)*this.radius,Math.sin(this.elevation)*this.radius+1,Math.cos(this.azimuth)*Math.cos(this.elevation)*this.radius];gl.uniformMatrix4fv(this.loc.view,false,multiply(perspective(w/h),lookAt(eye,[0,0,0])));
+  const b=this.draw.bind(this,'cube'),s=this.draw.bind(this,'sphere');
+  for(let i=0;i<45;i++){const x=Math.sin(i*123.7)*25,y=Math.cos(i*53.1)*15+3,z=-18-Math.abs(Math.sin(i*19.3))*15;b([x,y,z],[.025,.025,.025],[.6,.73,.8],0,.3);}
+  const ground=this.state.scenario==='surface';
+  if(ground){b([0,-1.6,0],[8,.15,7],[.28,.3,.33]);for(let i=0;i<14;i++)s([Math.sin(i*3.8)*7,-1.4,Math.cos(i*5.1)*6],[.2+(i%3)*.12,.14,.3],[.35,.36,.38]);s([-6,6,-22],[3,3,3],[.08,.33,.47]);}else{s([-9,-7,-23],[9,9,9],[.06,.22,.35]);s([-9,-7,-23.2],[9.1,9.1,9.1],[.08,.27,.38]);}
+  this.station();
+  const working=this.state.status==='working',progress=this.state.progress;
+  if(this.state.task==='evacuation'){const x=-1.2+progress*2;b([x,.1,1],[.8,.42,.5],[.54,.64,.67]);s([x,.3,1.3],[.5,.35,.3],[.08,.22,.31]);if(working)s([x-.9,.1,1],[.3+Math.sin(this.time*12)*.05,.13,.13],[.2,.7,1],0,.7);}
+  if(this.state.task==='research'){b([-.9,-.55,.8],[.7,.09,.4],[.35,.48,.53]);for(const x of [-1.3,-.5])b([x,-1,.8],[.05,.4,.05],[.23,.33,.4]);for(let i=0;i<3;i++)s([-1.25+i*.3,-.3,.8],[.09,.15,.09],[.2,.7,.65]);}
+  const count=Math.max(1,Math.min(2,this.state.team));for(let i=0;i<count;i++){const x=-1.6+i*1.4+(working&&this.state.task==='eva'?Math.sin(progress*Math.PI)*.25:0);this.astronaut(x,ground?-.3:0,.4+i*.25,i,working);if(this.state.task==='eva')b([x,-.3,-.2],[.015,.015,.6],[.8,.7,.3]);}
+  if(this.state.alert){const pulse=.3+Math.abs(Math.sin(this.time*4))*.4;s([2,1.25,-1],[.09,.09,.09],[1,.17,.22],0,pulse);}
+ }
+}
+
+
+
+
+
+const $=id=>document.getElementById(id);
+let mission,timer,selectedId,assessment,paused=false,report,initialName,previousRecommendation,seenEvents=0,scene,medicalBook,medicalUI;
+const charts=[['hr-chart','heart_rate','#61e2d3',40,145],['spo2-chart','spO2','#93aaff',85,100],['rad-chart','radiation_level','#efba73',0,10]];
+const format=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
+const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
+const names=ids=>ids.map(id=>mission.monitor.members.find(m=>m.id===id)?.name||id).join(', ');
+function feedback(text){$('operation-feedback').textContent=text;}
+function collectEvents(){
+ for(const event of mission.timeline.slice(seenEvents)){
+  const li=node('li',undefined,['alert','pause','blocked'].includes(event.type)?'alert':'');li.append(node('time',format(event.second)),document.createTextNode(event.text));$('log').prepend(li);
+ }seenEvents=mission.timeline.length;
+}
+function setTask(id){if(mission?.assignment&&['working','paused'].includes(mission.assignment.status)){feedback('Сначала завершите или отмените текущее задание.');return;}$('task').value=id;previousRecommendation=null;render();}
+function autoPilot(){
+ if(!$('autopilot').checked||paused||mission.finished||!dailyReady())return;
+ const a=mission.assignment;
+ if(a?.status==='paused'){const replacement=mission.replacementPlan();if(replacement?.ready)mission.replace();return;}
+ if(a?.status==='working')return;
+ if(a?.status==='completed'&&$('task').value===a.taskId){const next=Object.keys(tasks).find(id=>!mission.completed.some(t=>t.taskId===id));if(!next)return;$('task').value=next;}
+ const id=$('task').value,p=mission.preflight;
+ if(p?.status==='testing')return;
+ if(p?.taskId===id&&p.status==='passed'&&mission.elapsed-p.finishedAt<=25){if(mission.assign(id))return;}
+ if(!p||p.taskId!==id||p.status==='cancelled'||mission.elapsed-(p.finishedAt??p.started)>=5)mission.startPreflight(id);
+}
+function drawCharts(){
+ if(!mission)return;const member=mission.monitor.members.find(m=>m.id===selectedId);
+ for(const [id,key,color,min,max]of charts){const canvas=$(id),rect=canvas.getBoundingClientRect();if(!rect.width)continue;const dpr=window.devicePixelRatio||1;canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
+ ctx.strokeStyle='#263a48';ctx.lineWidth=1;for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(0,h*i/4);ctx.lineTo(w,h*i/4);ctx.stroke();}
+ const data=member.history.slice(-50);ctx.beginPath();let drawing=false;data.forEach((s,i)=>{if(!s.trusted){drawing=false;return;}const x=i/49*w,y=h-6-(Math.max(min,Math.min(max,s.values[key]))-min)/(max-min)*(h-12);drawing?ctx.lineTo(x,y):ctx.moveTo(x,y);drawing=true;});ctx.strokeStyle=canvas.closest('.metric').classList.contains('danger')?'#ff576c':color;ctx.lineWidth=2;ctx.stroke();
+ }
+}
+function renderCrew(){
+ assessment=mission.assessment($('task').value);const best=assessment.best;
+ const recommendationKey=assessment.taskId+':'+(best?.id||'none');
+ if(recommendationKey!==previousRecommendation){mission.record('recommendation',best?`Для задания «${assessment.task}» рекомендован ${best.name}. ${best.score}/100.`:'Подходящий кандидат не найден.');previousRecommendation=recommendationKey;}
+ $('recommended-name').textContent=best?best.name:'Подходящих участников нет';$('recommendation-reason').textContent=assessment.explanation;$('recommendation').classList.toggle('danger',!best);
+ const task=tasks[$('task').value];$('task-weights').textContent=`Биометрия: пульс ${task.weights.pulse*100}% / кислород ${task.weights.oxygen*100}% / радиация ${task.weights.radiation*100}%`;
+ $('task-requirements').textContent=`${task.name}: ${task.size} участник(а), 1 резерв; SpO₂ ≥ ${task.minOxygen}%, пульс 50–100, фон 0.1–5; усталость < ${task.maxFatigue}%, накопленная доза < ${task.doseBudget} мкЗв. Длительность ${task.duration} с. Проба нагрузки — 4 с, результат действителен 25 с. Это учебные пороги.`;
+ const body=$('crew-table-body');body.replaceChildren();
+ for(const m of assessment.ranked){const row=node('tr');row.classList.toggle('crew-best',m.id===best?.id);row.classList.toggle('crew-selected',m.id===selectedId);row.classList.toggle('crew-excluded',!m.eligible);
+  const first=node('td'),button=node('button',m.name+(m.id===best?.id?' ★':''),'crew-name-button');button.setAttribute('aria-pressed',String(m.id===selectedId));button.addEventListener('click',()=>{selectedId=m.id;render();});first.append(button,node('small',m.role,'table-role'));row.append(first);
+  for(const [key,bad]of [['heart_rate',m.values.heart_rate<50||m.values.heart_rate>100],['spO2',m.values.spO2<task.minOxygen],['radiation_level',m.values.radiation_level>5]]){const td=node('td',key==='radiation_level'?m.values[key].toFixed(2):m.values[key],bad?'bad-value':'');if(!m.trusted)td.classList.add('stale-value');row.append(td);}
+  row.append(node('td',Math.round(m.fatigue)+'%',m.fatigue>=task.maxFatigue?'bad-value':''),node('td',m.dose.toFixed(4),m.dose>=task.doseBudget?'bad-value':''),node('td',m.risk.level,m.risk.score>=55?'bad-value':m.risk.score>=30?'warning-value':''));
+  const state=node('td',m.eligible?({working:'Выполняет задание',testing:'Проба нагрузки',rest:'Отдых / доступен'}[m.status]):m.reasons.join('; '),m.eligible?'':'bad-value');row.append(state,node('td',m.eligible?m.score+'/100':'—'));body.append(row);
+ }
+}
+function renderAssignment(){
+ const a=mission.assignment,p=mission.preflight,taskId=$('task').value,task=tasks[taskId];
+ const cards=$('task-cards');cards.replaceChildren();
+ for(const [id,t]of Object.entries(tasks)){const b=node('button',undefined,'task-card');b.classList.toggle('active',id===taskId);b.append(node('small',`0${Object.keys(tasks).indexOf(id)+1} / ${t.size} УЧАСТНИК(А)`),node('strong',t.name),node('span',t.description));b.disabled=mission.finished||!!(a&&['working','paused'].includes(a.status)&&a.taskId!==id);b.setAttribute('aria-pressed',String(id===taskId));b.addEventListener('click',()=>setTask(id));cards.append(b);}
+ $('team-plan').textContent=`Группа: ${names(assessment.team.map(m=>m.id))||'не подобрана'}. Резерв: ${assessment.reserve?.name||'не найден'}. ${assessment.reason}`;
+ const status={working:'Задание выполняется',paused:'Задание приостановлено',completed:'Задание выполнено',cancelled:'Задание отменено',interrupted:'Задание не завершено'};
+ $('assignment-title').textContent=a?(status[a.status]+' / '+tasks[a.taskId].name):p?.status==='testing'?'Проверка готовности экипажа':'Группа ожидает назначения';
+ $('assignment-detail').textContent=a?`Участники: ${names(a.ids)}. Резерв: ${names([a.reserveId])}. Прогресс ${a.progress}/${tasks[a.taskId].duration} с. ${a.status==='paused'?a.pauseReason:''}`:p?.status==='testing'?`Учебная проба нагрузки: ${mission.elapsed-p.started}/4 с. Сравниваются исходные и текущие показатели.`:'Выберите задание и проверьте готовность группы. При автоматическом режиме система выполнит назначение сама.';
+ $('assignment-fill').style.width=(a?a.progress/tasks[a.taskId].duration*100:0)+'%';
+ const busy=a&&['working','paused'].includes(a.status),passed=p?.status==='passed'&&p.taskId===taskId&&mission.elapsed-p.finishedAt<=25;
+ $('preflight').disabled=mission.finished||paused||!!busy||p?.status==='testing'||!assessment.ready;
+ $('assign').disabled=mission.finished||paused||!!busy||!passed||!assessment.ready;
+ const replacement=mission.replacementPlan();$('replace').disabled=mission.finished||paused||!replacement?.ready;
+ $('cancel-task').disabled=mission.finished||paused||(!busy&&p?.status!=='testing');
+ $('task').disabled=mission.finished||!!busy;
+ const results=$('preflight-results');results.replaceChildren();
+ if(!p)results.append(node('p','Проба ещё не выполнялась.'));
+ else{results.append(node('p',`Статус: ${{testing:'выполняется',passed:'пройдена',failed:'не пройдена',cancelled:'отменена',interrupted:'прервана'}[p.status]}. Участники: ${names(p.ids)}.`));for(const r of p.results||[]){results.append(node('p',`${r.name}: пульс ${r.before.heart_rate} → ${r.after.heart_rate} (Δ ${r.pulseDelta}); SpO₂ ${r.before.spO2} → ${r.after.spO2}% (Δ ${r.oxygenDelta}). ${r.passed?'Проверка пройдена':'Не пройдена: '+(r.reasons.join('; ')||'реакция на нагрузку вне правил модели')}`,r.passed?'':'bad-value'));}}
+ if(a?.status==='paused')feedback(replacement?.reason||a.pauseReason);
+}
+function renderSelected(){
+ const m=mission.monitor.members.find(m=>m.id===selectedId),r=riskOf(m),values=m.values;
+ const medical=values.heart_rate<50||values.heart_rate>100||values.spO2<94||values.radiation_level>5;
+ $('crew-name').textContent=m.name;$('hr').textContent=values.heart_rate;$('spo2').textContent=values.spO2;$('rad').textContent=values.radiation_level.toFixed(2);
+ $('health-status').textContent=!m.trusted?(m.sensorFault?'● НЕИСПРАВНОСТЬ ДАТЧИКА':'● КАНАЛ ТЕЛЕМЕТРИИ НЕДОСТОВЕРЕН'):medical?'● ТРЕВОГА / ОТКЛОНЕНИЕ ПОКАЗАТЕЛЕЙ':r.score>=30?'● НАБЛЮДЕНИЕ / РИСК ПОВЫШЕН':'● СОСТОЯНИЕ СТАБИЛЬНО';
+ $('health-status').classList.toggle('critical',medical&&m.trusted);$('health-status').classList.toggle('uncertain',!m.trusted||r.score>=30);
+ $('health-detail').textContent=!m.trusted?`Показаны последние доверенные данные (${format(m.lastTrusted)}). ${m.sensorFault?'Ложный SpO₂ 52% отклонён: это сбой измерения, а не установленная гипоксия.':'Текущие пакеты отклонены; требуется восстановление достоверности.'}`:assessment.ranked.find(x=>x.id===m.id).reasons.join('; ')||'Текущие показатели соответствуют требованиям выбранного задания.';
+ $('activity').textContent=m.radiationWatch?.active?'Радиационное наблюдение / защитный отсек':{working:'Выполняет '+(tasks[mission.assignment?.taskId]?.name||'задание'),testing:'Проба нагрузки',rest:'Отдых и восстановление'}[m.status];
+ $('sensor-status').textContent=paused?'Наблюдение приостановлено':!m.trusted?m.sensorFault?'Сбой датчика / значение отклонено':'Канал нарушен / последнее измерение':'Три биодатчика активны';
+ $('sample-time').textContent=mission.finished?'Запись завершена / '+format(mission.elapsed):paused?'Обновление приостановлено':'Последний доверенный замер: '+format(m.lastTrusted)+' / 1 Гц';
+ $('body-scan').classList.toggle('medical-alert',medical&&m.trusted);
+ for(const [id,bad]of [['chest-sensor',values.heart_rate>100||values.heart_rate<50],['oxygen-sensor',values.spO2<94],['radiation-sensor',values.radiation_level>5]])$(id).classList.toggle('sensor-alert',bad&&m.trusted);
+ const flags=[values.heart_rate<50||values.heart_rate>100,values.spO2<94,values.radiation_level>5];
+ document.querySelectorAll('.metric').forEach((el,i)=>{el.classList.toggle('danger',flags[i]&&m.trusted);el.querySelector('.range').textContent=!m.trusted?'⚠ ПОСЛЕДНИЕ ДОВЕРЕННЫЕ ДАННЫЕ':flags[i]?'⚠ ВНЕ ДИАПАЗОНА МОДЕЛИ':['Норма модели: 50–100','Норма модели: 94–100','Норма модели: 0.1–5.0'][i];});
+ $('risk-label').textContent=r.level+' / '+r.score+' из 100';$('risk-label').classList.toggle('bad-value',r.score>=55);$('trend-title').textContent=r.trend.label;$('forecast').textContent=r.forecast;$('risk-explanation').textContent=(r.reasons.length?r.reasons.join('; '):'Нет выраженных факторов ухудшения')+'. Индекс — учебная шкала, не вероятность и не диагноз.';
+ $('trend-history').replaceChildren();for(const point of m.history.slice(-10)){const bar=node('span',point.trusted?point.values.spO2+'%':'нет данных');bar.style.setProperty('--value',Math.max(5,(point.values.spO2-85)/15*100)+'%');bar.title=format(point.second);$('trend-history').append(bar);}
+ $('complaint').textContent=m.symptoms.length?'«'+m.symptoms.map(s=>s.text).join('. ')+'»':'«Самочувствие обычное, выраженных жалоб нет». Симулированное сообщение.';
+ $('member-duty').textContent=m.radiationWatch?.active?'ЗАЩИТНЫЙ ОТСЕК':{working:'РАБОТАЕТ',testing:'ПРОБА',rest:'ВОССТАНАВЛИВАЕТСЯ'}[m.status];$('fatigue-value').textContent=Math.round(m.fatigue)+'%';$('dose-value').textContent=m.dose.toFixed(4)+' мкЗв';$('fatigue-bar').value=m.fatigue;
+ $('dose-note').textContent=`Доза = сумма доверенных измерений фона × время / 3600. ${m.unknownDoseSeconds||0} с без измерений не включены; доза за эти интервалы неизвестна.`;
+ $('radiation-watch').classList.toggle('danger',!!m.radiationWatch?.active);$('radiation-watch').textContent=m.radiationWatch?.active?(m.radiationWatch.doseHold?'ЗАЩИТНОЕ НАБЛЮДЕНИЕ / накопленная доза ≥ '+radiationRules.doseHold+' мкЗв (учебный порог). Назначения заблокированы. Нормализация фона не обнуляет дозу; требуется пересмотр допуска.':'ЗАЩИТНОЕ НАБЛЮДЕНИЕ / повышенный фон. Назначения заблокированы до '+radiationRules.stableSamples+' нормальных доверенных замеров подряд. Сейчас: '+m.radiationWatch.normalSamples+'/'+radiationRules.stableSamples):'Радиационное наблюдение: активного ограничения нет. Фон и накопленная доза учитываются раздельно.';
+ $('rest-member').disabled=mission.finished||paused||m.status==='rest';
+ drawCharts();
+}
+function render(){
+ if(!mission)return;renderCrew();renderAssignment();renderSelected();medicalUI?.status();
+ const e=mission.event,percent=mission.elapsed/mission.duration*100;$('clock').textContent=format(mission.elapsed);$('score').textContent=Math.round(percent)+'%';$('resolved').textContent=mission.completed.length;
+ const phase=mission.elapsed<5?0:mission.elapsed<18?1:mission.elapsed<35?2:mission.elapsed<72?3:4;
+ $('phase').textContent=['Подготовка экипажа','Начало миссии','Адаптация','Выполнение заданий','Завершение миссии'][phase];$('progress-fill').style.width=percent+'%';document.querySelectorAll('.stages li').forEach((el,i)=>{el.classList.toggle('current',i===phase);el.classList.toggle('done',i<phase);});
+ const selected=mission.monitor.members.find(m=>m.id===selectedId),selectedAlert=!selected.trusted||selected.values.spO2<94||selected.values.heart_rate>100||selected.values.radiation_level>5;
+ $('live-mission').classList.toggle('danger',selectedAlert);$('event-panel').classList.toggle('danger',!!e);$('flight-warning').hidden=!selectedAlert;$('flight-warning').textContent='⚠ '+$('health-status').textContent;
+ $('event-title').textContent=e?eventDescription(e,mission.monitor.members):'Наблюдение за экипажем продолжается';$('event-detail').textContent=e?`Событие в симуляции / длительность ${mission.elapsed-e.started} с. Состояние каждого участника проверяется отдельно.`:'Проверяются текущие измерения, жалобы, усталость, история и доступность резерва.';$('event-badge').textContent=mission.finished?'ЗАПИСЬ ОКОНЧЕНА':paused?'ПАУЗА':e?'СОБЫТИЕ':'ШТАТНО';
+ $('feedback').textContent=e?.type==='sensor'?'Показание неисправного датчика отклонено; последнее достоверное значение сохранено. Участник временно исключён из назначения.':e?'Автоматическая защита и повторная оценка экипажа. Опасное задание приостанавливается до восстановления или замены.':'Нет активных сценарных сбоев. Участники вне нормы остаются исключёнными из назначения.';
+ collectEvents();
+ $('scene-crew-label').textContent=mission.assignment?'Участники: '+names(mission.assignment.ids)+' / резерв: '+names([mission.assignment.reserveId]):'Экипаж ожидает проверки готовности';
+ if(scene)scene.update({scenario:mission.scenario,task:mission.assignment?.taskId||$('task').value,status:paused?'paused':mission.finished?'finished':mission.assignment?.status||'waiting',progress:mission.assignment?mission.assignment.progress/tasks[mission.assignment.taskId].duration:0,team:mission.assignment?.ids.length||tasks[$('task').value].size,alert:!!e});
+}
+function start(name){
+ clearInterval(timer);initialName=name;let storage;try{storage=window.localStorage;}catch{}medicalBook=new DailyMedicalBook(storage,name);mission=new MissionControl(name,$('scenario').value,medicalBook);$('task').value=missionScenarios[mission.scenario].preferred;assessment=mission.assessment($('task').value);selectedId=assessment.best?.id||'c1';previousRecommendation=null;seenEvents=0;paused=false;report=null;
+ $('welcome').hidden=true;$('result').hidden=true;$('dashboard').hidden=false;$('pause').disabled=false;$('finish').disabled=false;$('task').disabled=false;$('pause').textContent='Пауза';$('pilot').textContent='АЛЬФА / 4 участника';$('scenario-name').textContent=missionScenarios[mission.scenario].name;$('log').replaceChildren();feedback('');$('rest-feedback').textContent='';
+ if(medicalUI)medicalUI.setContext(mission,medicalBook);else medicalUI=new DailyMedicalUI(mission,medicalBook,()=>{mission.syncDailyExams();autoPilot();render();},executeDailyRow);
+ if(!scene)scene=new MissionScene($('mission-3d'),$('scene-fallback'));autoPilot();render();
+ timer=setInterval(()=>{if(paused)return;mission.syncDailyExams();if(!dailyReady()){if(mission.assignment?.status==='working'){mission.assignment.status='paused';mission.assignment.pauseReason='Не пройден обязательный медосмотр за новый день.';mission.monitor.members.forEach(m=>m.status='rest');mission.record('pause',mission.assignment.pauseReason);}render();return;}mission.tick();autoPilot();render();if(mission.finished)finish();},1000);
+}
+function finish(){
+ clearInterval(timer);report=mission.finish();render();report=mission.report();report.comparison=assessment.ranked;report.recommendedTeam=assessment.team.map(m=>m.id);report.selectedTask=assessment.taskId;report.dailyMedical=medicalBook.export();
+ $('dashboard').hidden=true;$('result').hidden=false;$('result-name').textContent=initialName;$('result-score').textContent=mission.completed.length;$('result-resolved').textContent=mission.replacements;$('result-mistakes').textContent=mission.elapsed;
+ $('result-note').textContent=`Сценарий: ${missionScenarios[mission.scenario].name}. ${mission.completed.length} заданий выполнено. ${mission.assignment?.status==='interrupted'?'Последнее задание прервано окончанием наблюдения.':''}`;
+ $('selection-summary').textContent='Последняя оценка: '+assessment.explanation;$('medical-summary').textContent='Разбор включает весь экипаж, а не только открытого участника.';
+ $('report-crew').replaceChildren();for(const m of mission.monitor.members){const card=node('article',undefined,'report-member'),trusted=m.history.filter(s=>s.trusted);card.append(node('h3',m.name),node('p',trusted.length?`Пульс: ${Math.min(...trusted.map(s=>s.values.heart_rate))}–${Math.max(...trusted.map(s=>s.values.heart_rate))}. Минимум SpO₂: ${Math.min(...trusted.map(s=>s.values.spO2))}%.`:'Нет доверенных измерений.'),node('p',`Усталость ${Math.round(m.fatigue)}%. Учтённая доза ${m.dose.toFixed(4)} мкЗв; ${m.unknownDoseSeconds||0} с пропущенных измерений.`));$('report-crew').append(card);}
+ $('report-timeline').replaceChildren();for(const event of report.timeline){const li=node('li');li.append(node('time',format(event.second)),node('span',event.text));$('report-timeline').append(li);}
+}
+$('scenario').addEventListener('change',()=>{$('scenario-description').textContent=missionScenarios[$('scenario').value].description;});
+$('entry').addEventListener('submit',e=>{e.preventDefault();const name=$('name').value.trim();if(!name){$('name').setCustomValidity('Введите имя первого участника');$('name').reportValidity();return;}$('name').setCustomValidity('');start(name);});$('name').addEventListener('input',()=>$('name').setCustomValidity(''));
+$('task').addEventListener('change',()=>{if(mission)render();});
+$('preflight').addEventListener('click',()=>{feedback(mission.startPreflight($('task').value)?'Начата проверка группы и резерва.':'Проверку сейчас начать нельзя.');render();});
+$('assign').addEventListener('click',()=>{feedback(mission.assign($('task').value)?'Группа назначена. Выполнение началось.':'Назначение невозможно. Проверьте актуальную готовность и резерв.');render();});
+$('replace').addEventListener('click',()=>{feedback(mission.replace()?'Замена выполнена.':mission.replacementPlan()?.reason||'Замена недоступна.');render();});
+$('cancel-task').addEventListener('click',()=>{$('autopilot').checked=false;mission.cancel();feedback('Задание отменено. Автоматическое назначение выключено.');render();});
+$('rest-member').addEventListener('click',()=>{const m=mission.monitor.members.find(m=>m.id===selectedId);$('autopilot').checked=false;if(m.status==='working'||m.status==='testing')mission.cancel();m.status='rest';mission.record('rest',m.name+': переведён на отдых. Усталость будет снижаться на следующих тактах.');$('rest-feedback').textContent='Участник отдыхает; автоматическое назначение выключено.';render();});
+$('autopilot').addEventListener('change',()=>{autoPilot();render();});
+$('pause').addEventListener('click',()=>{paused=!paused;$('pause').textContent=paused?'Продолжить':'Пауза';render();});$('finish').addEventListener('click',finish);
+$('back-monitor').addEventListener('click',()=>{$('result').hidden=true;$('dashboard').hidden=false;$('pause').disabled=true;$('finish').disabled=true;render();});
+$('restart').addEventListener('click',()=>start(initialName));
+$('download').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=node('a');a.href=url;a.download='alpha-crew-mission.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+function dailyReady(){return mission.monitor.members.every(m=>medicalBook.get(medicalBook.today(),m.id));}
+function executeDailyRow(row,day){
+ if(day!==medicalBook.today())return 'Архивный план нельзя выполнить как сегодняшнее задание.';
+ if(mission.finished||paused)return 'Сначала запустите активную миссию.';
+ if(!dailyReady())return 'Пройдите ежедневный медосмотр всех участников.';
+ if(['working','paused'].includes(mission.assignment?.status)||mission.preflight?.status==='testing')return 'Сначала завершите или отмените текущее задание/проверку.';
+ $('autopilot').checked=false;$('task').value=row.taskId;
+ const ok=mission.startPreflight(row.taskId,{ids:[...row.ids],reserveId:row.reserveId});render();
+ return ok?'Группа из дневного плана проходит пробу нагрузки. Через 4 секунды нажмите «Назначить группу».':'Назначение из плана заблокировано: текущие показатели или допуск изменились. Пересчитайте план.';
+}
+$('reset-camera').addEventListener('click',()=>scene?.reset());window.addEventListener('resize',drawCharts);
+
+</script>
+</body></html>
