@@ -21,7 +21,7 @@ export class LanguageSettings{
   this.apply(document.body);
   if(typeof MutationObserver!=='undefined'){
    this.observer=new MutationObserver(records=>{for(const record of records){if(record.type==='characterData')this.text(record.target);else if(record.type==='attributes')this.attribute(record.target,record.attributeName);else for(const node of record.addedNodes)this.apply(node);}});
-   this.observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder','aria-label']});
+   this.observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','placeholder','aria-label','alt']});
   }
   if(document.documentElement)document.documentElement.lang=currentLanguage;
  }
@@ -40,9 +40,9 @@ export class LanguageSettings{
   if(!root||!document.createTreeWalker)return;
   if(root.nodeType===3){this.text(root);return;}
   if(root.nodeType!==1||this.excluded(root))return;
-  for(const name of ['title','placeholder','aria-label'])this.attribute(root,name);
+  for(const name of ['title','placeholder','aria-label','alt'])this.attribute(root,name);
   const walker=document.createTreeWalker(root,4);let text;while(text=walker.nextNode())this.text(text);
-  for(const element of root.querySelectorAll('[title],[placeholder],[aria-label]'))for(const name of ['title','placeholder','aria-label'])this.attribute(element,name);
+  for(const element of root.querySelectorAll('[title],[placeholder],[aria-label],[alt]'))for(const name of ['title','placeholder','aria-label','alt'])this.attribute(element,name);
  }
  change(language){
   if(!setUILanguage(language))return false;

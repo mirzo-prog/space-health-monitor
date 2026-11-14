@@ -32,12 +32,34 @@ export class MissionScene{
   gl.enable(gl.DEPTH_TEST);gl.clearColor(.026,.047,.065,1);
  }
  update(state){this.state=state;const taskNames={eva:'ВЫХОД В ОТКРЫТЫЙ КОСМОС',repair:'РЕМОНТ ОБОРУДОВАНИЯ',research:'НАУЧНЫЙ ЭКСПЕРИМЕНТ',evacuation:'АВАРИЙНОЕ ВОЗВРАЩЕНИЕ'};const status={working:'Участники выполняют задание',paused:'Работа приостановлена',waiting:'Проверка и назначение экипажа',completed:'Задание выполнено',cancelled:'Задание отменено',interrupted:'Задание прервано',finished:'Миссия завершена'};document.getElementById('scene-task-label').textContent=taskNames[state.task];document.getElementById('scene-status-label').textContent=status[state.status]||'Подготовка';document.getElementById('scene-progress-label').textContent=Math.round(state.progress*100)+'%';}
- draw(mesh,pos,scale,color,rotation=0,glow=0){const gl=this.gl,m=this.meshes[mesh];gl.bindBuffer(gl.ARRAY_BUFFER,m.buffer);gl.enableVertexAttribArray(this.loc.position);gl.enableVertexAttribArray(this.loc.normal);gl.vertexAttribPointer(this.loc.position,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(this.loc.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(this.loc.model,false,modelMatrix(pos,scale,rotation));gl.uniform3fv(this.loc.color,color);gl.uniform1f(this.loc.glow,glow);gl.drawArrays(gl.TRIANGLES,0,m.count);}
- astronaut(x,y,z,index,working){const float=this.state.scenario==='surface'?0:Math.sin(this.time+index)*.1;y+=float;const suit=index===0?[.79,.85,.86]:[.52,.68,.76],dark=[.12,.23,.29],cyan=[.2,.8,.73],s=this.draw.bind(this,'sphere'),b=this.draw.bind(this,'cube'),move=working?Math.sin(this.time*3+index)*.24:0;
-  b([x,y,z],[.29,.43,.19],suit);b([x,y,z-.25],[.25,.36,.13],dark);s([x,y+.73,z],[.37,.38,.33],suit);s([x,y+.75,z+.19],[.28,.23,.18],[.06,.2,.28]);b([x,y+.02,z+.21],[.16,.12,.035],dark);b([x,y+.02,z+.25],[.1,.02,.01],cyan,0,.4);
-  for(const side of [-1,1]){b([x+side*.38,y+.04,z],[.1,.3,.11],suit,-side*(.2+move));s([x+side*(.46+move*.2),y-.23,z+.06],[.1,.12,.12],dark);b([x+side*.15,y-.69,z],[.12,.32,.12],suit,side*.05);b([x+side*.15,y-1.01,z+.05],[.14,.1,.21],dark);}
-  if(working&&['repair','eva'].includes(this.state.task)){s([x+.6,y-.1,z+.25],[.06,.06,.06],[.4,.9,1],0,.7+Math.sin(this.time*16)*.3);b([x+.55,y-.2,z+.14],[.04,.13,.04],[.6,.65,.68],-.6);}
+ draw(mesh,pos,scale,color,rotation=0,glow=0){const gl=this.gl,m=this.meshes[mesh];gl.bindBuffer(gl.ARRAY_BUFFER,m.buffer);gl.enableVertexAttribArray(this.loc.position);gl.enableVertexAttribArray(this.loc.normal);gl.vertexAttribPointer(this.loc.position,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(this.loc.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(this.loc.model,false,this.personTransform?multiply(this.personTransform,modelMatrix(pos,scale,rotation)):modelMatrix(pos,scale,rotation));gl.uniform3fv(this.loc.color,color);gl.uniform1f(this.loc.glow,glow);gl.drawArrays(gl.TRIANGLES,0,m.count);}
+ astronaut(x,y,z,index,working){
+  const floating=this.state.scenario!=='surface';y+=floating?Math.sin(this.time*.85+index)*.14:0;
+  const tilt=floating?(index===0?-.24:.15)+Math.sin(this.time*.5+index)*.055:0;
+  this.personTransform=multiply(modelMatrix([x,y,z],[1,1,1],tilt),modelMatrix([-x,-y,-z],[1,1,1]));
+  const suit=index===0?[.92,.93,.88]:[.87,.91,.9],trim=[.13,.2,.23],visor=[.025,.065,.08],warm=[.7,.65,.46],s=this.draw.bind(this,'sphere'),b=this.draw.bind(this,'cube'),move=working?Math.sin(this.time*2.6+index)*.2:Math.sin(this.time*.65+index)*.05;
+  b([x,y+.03,z-.24],[.28,.4,.15],[.76,.79,.74]);b([x,y+.04,z-.41],[.17,.28,.025],trim);
+  s([x,y+.05,z],[.32,.46,.23],suit);s([x,y-.35,z],[.31,.16,.22],suit);
+  s([x,y+.73,z],[.4,.42,.36],suit);s([x,y+.75,z+.22],[.31,.27,.18],trim);s([x,y+.76,z+.27],[.285,.24,.14],visor);
+  s([x-.14,y+.86,z+.365],[.065,.025,.012],[.48,.72,.75],0,.12);b([x+.33,y+.74,z],[.035,.22,.065],warm);
+  s([x,y+.38,z],[.29,.07,.23],trim);b([x,y+.04,z+.22],[.17,.14,.035],[.68,.73,.7]);b([x,y+.07,z+.265],[.105,.045,.01],trim);b([x,y+.073,z+.279],[.065,.008,.005],[.27,.78,.69],0,.12);
+  for(const side of [-1,1]){
+   s([x+side*.32,y+.24,z],[.14,.15,.14],suit);
+   b([x+side*.4,y+.02,z+.015],[.11,.24,.12],suit,-side*(.34+move));s([x+side*.48,y-.17,z+.06],[.12,.12,.12],trim);
+   b([x+side*.48,y-.3,z+.12],[.105,.18,.12],suit,-side*(.1+move));s([x+side*.5,y-.47,z+.16],[.12,.14,.13],suit);b([x+side*.49,y-.34,z+.24],[.105,.035,.018],trim);
+   const knee=side===-1&&floating?.08:0;
+   b([x+side*.16,y-.63,z],[.13,.27,.14],suit,side*(.1+move*.25));s([x+side*.18,y-.83,z+knee],[.14,.1,.15],trim);
+   b([x+side*.18,y-1.02,z+knee],[.13,.2,.14],suit,side*.07);s([x+side*.19,y-1.22,z+.09+knee],[.15,.11,.23],suit);b([x+side*.19,y-1.3,z+.09+knee],[.16,.025,.23],trim);
+  }
+  // Curved suit hose, formed from short segments in the astronaut's local frame.
+  for(let j=0;j<15;j++){const angle=j/14*Math.PI;s([x+.26+Math.sin(angle)*.16,y-.04-j*.029,z+.25],[.032,.032,.032],j%2?trim:warm);}
+  if(working&&['repair','eva'].includes(this.state.task)){s([x+.62,y-.45,z+.28],[.05,.05,.05],[.4,.9,1],0,.7+Math.sin(this.time*16)*.3);b([x+.56,y-.46,z+.19],[.04,.13,.04],[.6,.65,.68],-.6);}
+  this.personTransform=null;
+  if(floating){let previous=[x,y-.24,z-.15];for(let j=1;j<=16;j++){const t=j/16,point=[x+(1.1-x)*t,y-.24-.55*Math.sin(t*Math.PI),z-.15+(-1.3-z)*t];const dx=point[0]-previous[0],dy=point[1]-previous[1],dz=point[2]-previous[2],length=Math.hypot(dx,dy,dz);const dxn=dx/length,dyn=dy/length,dzn=dz/length,horizontal=Math.hypot(dxn,dzn),rx=dzn/horizontal,rz=-dxn/horizontal;
+   this.personTransform=new Float32Array([rx*.016,0,rz*.016,0,dyn*rz*.016,(dzn*rx-dxn*rz)*.016,-dyn*rx*.016,0,dx*.5,dy*.5,dz*.5,0,(point[0]+previous[0])/2,(point[1]+previous[1])/2,(point[2]+previous[2])/2,1]);
+   b([0,0,0],[1,1,1],[.67,.69,.49]);this.personTransform=null;previous=point;}}
  }
+
  station(){const b=this.draw.bind(this,'cube'),s=this.draw.bind(this,'sphere');b([2,.3,-1.4],[1.5,.8,.8],[.5,.6,.65]);s([.5,.3,-1.4],[.45,.8,.8],[.33,.43,.49]);b([2,.3,-.58],[.7,.35,.03],[.12,.23,.3]);b([2,.3,-.53],[.5,.035,.02],[.2,.8,.73],0,.25);b([2,.3,-2.4],[.3,.2,.4],[.3,.4,.48]);for(const side of [-1,1]){const x=2+side*2.9;b([x,.5,-1.5],[1.35,.045,.85],[.08,.27,.43]);for(let i=-3;i<=3;i++)b([x+i*.35,.55,-1.5],[.008,.015,.83],[.4,.63,.7]);for(const z of [-2.1,-1.5,-.9])b([x,.56,z],[1.34,.01,.008],[.4,.63,.7]);}for(let x=.7;x<3.5;x+=.7)b([x,-.48,-.55],[.018,.08,.018],[.68,.74,.77]);}
  frame(timestamp){
   if(!this.gl)return;requestAnimationFrame(this.frame);if(!this.canvas.getBoundingClientRect().width){this.last=timestamp;return;}

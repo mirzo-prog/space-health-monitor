@@ -1,3 +1,4 @@
+import {astronautPortrait} from './assets.mjs';
 import {createCrew,assessCrew} from './crew.mjs';
 export function profileClearance(mission,id){
  const member=mission?.monitor.members.find(m=>m.id===id);
@@ -21,7 +22,7 @@ export class CrewPortal{
  constructor(callbacks){
   this.callbacks=callbacks;this.$=id=>document.getElementById(id);this.profiles=createCrew('Алексей Иванов');this.profile=null;this.pending=null;this.step=1;
   let storage;try{storage=window.localStorage;}catch{}this.vault=new ProfileVault(storage);
-  const root=this.$('profile-cards');for(const [index,p]of this.profiles.entries()){const card=portalElement('button',undefined,'profile-card');card.type='button';card.setAttribute('data-profile',p.id);card.append(portalElement('span',['◉','✦','⬡','◈'][index],'profile-avatar'),portalElement('strong',p.name),portalElement('span',p.role),portalElement('small','ALPHA / '+p.id.toUpperCase()));card.addEventListener('click',()=>this.choose(p.id));root.append(card);}
+  const root=this.$('profile-cards');for(const [index,p]of this.profiles.entries()){const card=portalElement('button',undefined,'profile-card');card.type='button';card.setAttribute('data-profile',p.id);const avatar=portalElement('span',undefined,'profile-avatar'),portrait=portalElement('img');portrait.src=astronautPortrait;portrait.alt='Космонавт в белом скафандре';avatar.append(portrait);card.append(avatar,portalElement('strong',p.name),portalElement('span',p.role),portalElement('small','ALPHA / '+p.id.toUpperCase()));card.addEventListener('click',()=>this.choose(p.id));root.append(card);}
   this.$('compact-primary').addEventListener('click',()=>this.primaryAction());
   this.$('compact-health-tab').addEventListener('click',()=>this.navigate(2));this.$('compact-tasks-tab').addEventListener('click',()=>this.navigate(3));
   this.$('compact-details').addEventListener('toggle',()=>this.callbacks.redraw?.());
@@ -40,7 +41,7 @@ export class CrewPortal{
   const health=this.$('health-tools'),flight=this.$('flight-tools');
   for(const selector of ['#live-mission','.metrics']){const el=document.querySelector(selector);if(el)health.append(el);}
   for(const selector of ['.daily-medical','.diagnostics','.crew-selection','.lower-grid','.disclaimer']){const el=document.querySelector(selector);if(el)this.$('advanced-health-content').append(el);}
-  for(const selector of ['.scene-panel']){const el=document.querySelector(selector);if(el)flight.append(el);}
+  const missionScene=this.$('mission-scene-panel');if(missionScene)this.$('compact-scene').append(missionScene);
   for(const selector of ['#scenario-controls','.daily-planning','.assignment-panel']){const el=document.querySelector(selector);if(el)this.$('advanced-flight-content').append(el);}
   for(const id of ['advanced-health','advanced-flight']){this.$(id).open=true;this.$(id).addEventListener('toggle',()=>this.callbacks.redraw?.());}
   const scenarios=document.querySelector('.scenario-picker');if(scenarios)this.$('scenario-picker-slot').append(scenarios);for(const id of ['step-health','step-flight'])this.$('compact-details-content').append(this.$(id));

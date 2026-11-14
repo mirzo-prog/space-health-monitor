@@ -74,3 +74,9 @@ test('one primary button takes a novice from checkup through launch, pause, resu
 test('compact radiation restriction opens details without erasing dose or starting unsafe work',()=>{
  const b=browser();profileLogin(b);b.click('compact-primary');b.value("mission.monitor.members[0].dose=.12;updateRadiationWatch(mission.monitor.members[0]);render()");assert.equal(b.elements['compact-health-status'].textContent,'Работы запрещены');assert.equal(b.elements['compact-primary'].textContent,'Посмотреть причину');b.click('compact-primary');assert.equal(b.elements['compact-details'].open,true);assert.equal(b.value('mission.monitor.members[0].dose'),.12);assert.equal(b.value('portal.missionLaunched'),false);
 });
+test('3D mission scene lives on the main screen outside collapsed details',()=>{
+ const b=browser();const scene=b.elements['mission-scene-panel'];assert.ok(b.elements['compact-scene'].children.includes(scene));assert.ok(!b.elements['flight-tools'].children.includes(scene));assert.ok(!b.elements['advanced-flight-content'].children.includes(scene));profileLogin(b);b.click('compact-primary');b.click('compact-primary');for(let i=0;i<5;i++)b.tick();assert.equal(b.elements.dashboard.hidden,false);assert.equal(b.elements['mission-3d'].hidden,true);assert.equal(b.elements['scene-fallback'].hidden,false);assert.equal(b.value('mission.elapsed'),5);assert.ok(b.elements['compact-scene'].children.includes(scene));
+});
+test('reference astronaut image is embedded for offline profile cards and main portrait',()=>{
+ const b=browser();assert.ok(html.includes('id="compact-portrait" src="data:image/jpeg;base64,'));assert.equal(b.elements['profile-cards'].children.length,4);for(const card of b.elements['profile-cards'].children){const avatar=card.children[0];assert.ok(avatar.children[0].src.startsWith('data:image/jpeg;base64,'));assert.equal(avatar.children[0].alt,'Космонавт в белом скафандре');}
+});

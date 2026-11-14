@@ -3414,5 +3414,10 @@ export const languageMessages=[
   "Сменить космонавта",
   "Switch astronaut",
   "Kosmonavtni almashtirish"
+ ],
+ [
+  "Космонавт в белом скафандре",
+  "Astronaut in a white spacesuit",
+  "Oq skafandrdagi kosmonavt"
  ]
 ];
