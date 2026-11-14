@@ -22,6 +22,7 @@ export class CrewPortal{
  constructor(callbacks){
   this.callbacks=callbacks;this.$=id=>document.getElementById(id);this.profiles=createCrew('Алексей Иванов');this.profile=null;this.pending=null;this.step=1;
   let storage;try{storage=window.localStorage;}catch{}this.vault=new ProfileVault(storage);
+  this.$('compact-portrait').src=astronautPortrait;
   const root=this.$('profile-cards');for(const [index,p]of this.profiles.entries()){const card=portalElement('button',undefined,'profile-card');card.type='button';card.setAttribute('data-profile',p.id);const avatar=portalElement('span',undefined,'profile-avatar'),portrait=portalElement('img');portrait.src=astronautPortrait;portrait.alt='Космонавт в белом скафандре';avatar.append(portrait);card.append(avatar,portalElement('strong',p.name),portalElement('span',p.role),portalElement('small','ALPHA / '+p.id.toUpperCase()));card.addEventListener('click',()=>this.choose(p.id));root.append(card);}
   this.$('compact-primary').addEventListener('click',()=>this.primaryAction());
   this.$('compact-health-tab').addEventListener('click',()=>this.navigate(2));this.$('compact-tasks-tab').addEventListener('click',()=>this.navigate(3));

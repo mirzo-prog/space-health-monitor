@@ -1,2 +1,2 @@
-// User-provided reference image, embedded by the offline builder.
-export const astronautPortrait='astronaut-reference.jpg';
+// Original illustrated character in a normal standing pose.
+export const astronautPortrait='astronaut-standing.png';

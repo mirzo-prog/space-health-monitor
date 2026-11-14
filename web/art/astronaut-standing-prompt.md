@@ -1,0 +1,7 @@
+# Standing astronaut illustration
+
+Mode: built-in imagegen. The source photograph was used only as a suit-design reference. Final pose: upright standing, relaxed arms, straight legs.
+
+Final prompt:
+
+Use case: precise-object-edit. Asset type: hand-drawn character illustration for an astronaut-monitoring website. Change the character's POSE ONLY into a NORMAL UPRIGHT STANDING pose, full body visible from helmet to both boots, front-facing with only a very slight three-quarter turn, legs straight and naturally separated shoulder width, both boots level at the same baseline, arms relaxed down along the sides with a small comfortable gap from the torso. NOT floating, NOT weightless, NOT diagonal, NOT seated, NOT crouching, NOT bent knees, NOT waving. Keep the same appealing newly drawn white/ivory EVA spacesuit design, black opaque reflective visor, dark joints, straps, chest control box, life support backpack, short flexible breathing hose, delicate ink contours, soft digital shading and subtle cyan reflections from the reference drawing. Do not include a long trailing tether or surrounding objects. Transparent background with real alpha, no stars, no planet, no photo background, no ground plane, no drop-shadow rectangle, no text, no logo, no watermark. Composition: large centered standing astronaut with modest transparent margin; entire body and boots uncut. This is a new drawn character asset, not the user's photo.
