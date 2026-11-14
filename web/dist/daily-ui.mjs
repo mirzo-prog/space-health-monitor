@@ -1,3 +1,4 @@
+import {translateText} from './i18n.mjs';
 import {makeDailyPlan,tasks,radiationRules} from './crew.mjs';
 const dailyNode=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
 export class DailyMedicalUI{
@@ -38,7 +39,7 @@ export class DailyMedicalUI{
  const body=this.$('daily-history-body');body.replaceChildren();for(const e of [...history].reverse()){const row=dailyNode('tr');for(const text of [e.day,e.values.heart_rate,e.values.spO2,e.values.radiation_level,e.fatigue,e.dose.toFixed(4),(e.source==='simulation'?'симуляция':'вручную')+' / '+(e.trusted?'достоверно':'недостоверно')])row.append(dailyNode('td',text));body.append(row);}
  for(const [id,key]of [['daily-hr-chart','heart_rate'],['daily-oxygen-chart','spO2'],['daily-radiation-chart','radiation_level'],['daily-fatigue-chart','fatigue'],['daily-dose-chart','dose']])this.drawDiagram(this.$(id),history,key);
  }
- drawDiagram(canvas,history,key){const rect=canvas.getBoundingClientRect();if(!rect.width)return;const ctx=canvas.getContext('2d');if(!ctx)return;const dpr=window.devicePixelRatio||1,w=rect.width,h=150;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);ctx.font='9px monospace';ctx.fillStyle='#8fa6b4';if(!history.length){ctx.fillText('Нет сохранённых осмотров',12,60);return;}const values=history.map(e=>e.values[key]??e[key]),max=(Math.max(...values)>0?Math.max(...values):1)*1.2,barWidth=(w-42)/history.length;
+ drawDiagram(canvas,history,key){const rect=canvas.getBoundingClientRect();if(!rect.width)return;const ctx=canvas.getContext('2d');if(!ctx)return;const dpr=window.devicePixelRatio||1,w=rect.width,h=150;canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);ctx.font='9px monospace';ctx.fillStyle='#8fa6b4';if(!history.length){ctx.fillText(translateText('Нет сохранённых осмотров'),12,60);return;}const values=history.map(e=>e.values[key]??e[key]),max=(Math.max(...values)>0?Math.max(...values):1)*1.2,barWidth=(w-42)/history.length;
  ctx.strokeStyle='#2b3e4b';for(let i=0;i<4;i++){const y=110-i*30;ctx.beginPath();ctx.moveTo(32,y);ctx.lineTo(w,y);ctx.stroke();ctx.fillStyle='#8fa6b4';ctx.fillText((max*i/3).toFixed(max<1?3:0),0,y+3);}
  history.forEach((e,i)=>{const height=values[i]/max*90,x=34+i*barWidth;ctx.fillStyle=e.trusted?'#61e2d3':'#ff576c';ctx.fillRect(x+barWidth*.15,110-height,barWidth*.7,height);ctx.fillStyle='#c8dce5';if(history.length<=7)ctx.fillText(values[i].toFixed(key==='dose'?4:key==='radiation_level'?2:1),x,104-height);if(history.length<=7||i===0||i===history.length-1){ctx.save();ctx.translate(x+3,123);ctx.rotate(-.3);ctx.fillStyle='#8fa6b4';ctx.fillText(e.day.slice(5),0,0);ctx.restore();}});
  }

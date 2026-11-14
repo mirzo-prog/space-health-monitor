@@ -1,3 +1,4 @@
+import {LanguageSettings} from './i18n.mjs';
 import {CrewPortal,profileClearance} from './crew-portal.mjs';
 import {renderReportPdf} from './pdf-report.mjs';
 import {DailyMedicalBook} from './daily-medical.mjs';
@@ -225,3 +226,5 @@ portal=new CrewPortal({
  examineCrew:()=>{let recorded=0;for(const m of mission.monitor.members){if(!medicalBook.get(medicalBook.today(),m.id)){medicalBook.record(medicalBook.today(),m,{values:m.values,fatigue:m.fatigue,dose:m.dose,trusted:m.trusted,symptoms:m.symptoms,source:'simulation',notes:'Учебный осмотр из панели экипажа'});recorded++;}}mission.syncDailyExams();medicalUI.render();render();return 'Записано учебных осмотров: '+recorded+'. Допуск каждого участника зависит от его показателей.';}
 });
 window.addEventListener('beforeunload',()=>portal.save());
+
+const languageSettings=new LanguageSettings(()=>{drawCharts();if(medicalUI)medicalUI.renderHistory();});

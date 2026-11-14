@@ -6,7 +6,7 @@ assets = root / 'dist'
 html = (assets / 'index.html').read_text()
 css = (assets / 'style.css').read_text()
 modules = []
-for name in ('daily-medical.mjs', 'crew.mjs', 'daily-ui.mjs', 'scene3d.mjs', 'pdf-report.mjs', 'crew-portal.mjs', 'app.mjs'):
+for name in ('language-messages.mjs', 'i18n.mjs', 'daily-medical.mjs', 'crew.mjs', 'daily-ui.mjs', 'scene3d.mjs', 'pdf-report.mjs', 'crew-portal.mjs', 'app.mjs'):
     source = (assets / name).read_text()
     source = re.sub(r'^import .*?;\s*$', '', source, flags=re.MULTILINE)
     source = re.sub(r'\bexport (?=(const|class|function|async)\b)', '', source)
