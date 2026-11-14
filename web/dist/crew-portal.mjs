@@ -27,7 +27,7 @@ export class CrewPortal{
   this.$('pin-cancel').addEventListener('click',()=>{this.pending=null;this.pin='';this.$('pin-screen').hidden=true;this.$('profile-cards').hidden=false;});
   this.$('logout').addEventListener('click',()=>this.logout());
   for(const step of [1,2,3])this.$('step-button-'+step).addEventListener('click',()=>this.navigate(step));
-  this.$('to-flight-tasks').addEventListener('click',()=>this.navigate(3));this.$('back-to-health').addEventListener('click',()=>this.navigate(2));
+  this.$('to-flight-tasks').addEventListener('click',()=>this.navigate(3));this.$('back-to-health').addEventListener('click',()=>this.navigate(2));this.$('start-scenario').addEventListener('click',()=>this.callbacks.scenario());
   this.$('recover-rest').addEventListener('click',()=>this.beginRecovery());
   this.$('recover-kit').addEventListener('click',()=>{this.callbacks.message('УЧЕБНЫЙ ЗАПРОС: открыта карточка обращения к медблоку. Препараты и дозировки программа не назначает.');this.$('recovery-feedback').textContent='Запрос инструкции отмечен в журнале симуляции. Реальной связи с ЦУП нет.';});
   this.$('recover-medic').addEventListener('click',()=>{this.callbacks.message('УЧЕБНЫЙ ЗАПРОС: помощь бортинженера-медика.');this.$('recovery-feedback').textContent='Вызов медика добавлен в учебный журнал; внешнее сообщение не отправлялось.';});
@@ -41,7 +41,7 @@ export class CrewPortal{
   const health=this.$('health-tools'),flight=this.$('flight-tools');
   for(const selector of ['.daily-medical','#live-mission','.diagnostics','.metrics','.crew-selection','.lower-grid','.disclaimer']){const el=document.querySelector(selector);if(el)health.append(el);}
   for(const selector of ['.daily-planning','.assignment-panel','.scene-panel']){const el=document.querySelector(selector);if(el)flight.append(el);}
-  document.body.classList.add('portal-active');
+  const scenarios=document.querySelector('.scenario-picker');if(scenarios)this.$('scenario-picker-slot').append(scenarios);document.body.classList.add('portal-active');
  }
  choose(id){this.pending=this.profiles.find(p=>p.id===id);if(!this.pending)return;this.pin='';this.$('profile-cards').hidden=true;this.$('pin-screen').hidden=false;this.$('pin-person').textContent=this.pending.name+' / '+this.pending.role;this.$('pin-message').textContent='Учебный PIN для всех профилей: 1234. Или используйте демонстрацию ID-бейджа.';this.drawPin();}
  drawPin(){this.$('pin-dots').textContent='●'.repeat(this.pin.length)+'○'.repeat(4-this.pin.length);this.$('pin-dots').setAttribute('aria-label','Введено цифр: '+this.pin.length+' из 4');}
@@ -64,6 +64,7 @@ export class CrewPortal{
   if(can)this.lastMedicalAlert=null;
   const missingExam=!status.member?.dailyExam||status.member.dailyExam.day!==status.member.medicalDay;this.$('recovery-panel').hidden=can||missingExam;if(missingExam)this.$('clearance-status').textContent='Для допуска запишите обязательный медосмотр за сегодня.';this.$('recovery-warning').textContent='Выход в открытый космос и тяжёлые работы приостановлены. Учебная передача телеметрии в медблок ЦУП отмечается в журнале; реальной связи с Землёй нет.';
   const alertKey=this.profile.id+':'+status.reasons.join('|');if(!can&&!missingExam&&this.lastMedicalAlert!==alertKey){this.lastMedicalAlert=alertKey;this.callbacks.message('УЧЕБНАЯ ТЕЛЕМЕТРИЯ В МЕДБЛОК ЦУП: '+this.profile.name+'. '+status.reasons.join('; ')+'. Реальная передача не выполнялась.');}
+  this.$('start-scenario').disabled=!!this.callbacks.running?.();
   this.$('profile-storage-warning').textContent=this.vault.warning;
   if(!can&&this.step===3){this.step=2;this.$('step-health').hidden=false;this.$('step-flight').hidden=true;this.$('step-button-2').classList.toggle('active',true);this.$('step-button-3').classList.toggle('active',false);this.$('step-hint').textContent='Допуск изменился. Вернитесь к мониторингу и повторной проверке.';}
   const progress=this.callbacks.progress(this.profile.id);this.$('personal-progress').textContent=`Личный прогресс: ${progress.completed} заданий · ${progress.seconds} с наблюдения.`;

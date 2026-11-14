@@ -187,6 +187,8 @@ function recoveryReview(id,stabilize=false){
 }
 portal=new CrewPortal({
  login:openPersonalProfile,
+ running:()=>!!mission&&mission.elapsed>0&&!mission.finished,
+ scenario:()=>{if(mission.elapsed>0&&!mission.finished)return;start(initialName);portal.navigate(3);},
  logout:()=>{clearInterval(timer);$('dashboard').hidden=true;$('result').hidden=true;},
  snapshot:savePersonalState,
  clearance:id=>profileClearance(mission,id),
